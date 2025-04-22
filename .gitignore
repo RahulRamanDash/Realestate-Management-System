@@ -1,0 +1,32 @@
+# =========================
+# Spring Boot ignores
+# =========================
+/RealestateApiServer/target/
+/RealestateApiServer/.classpath
+/RealestateApiServer/.project
+/RealestateApiServer/.settings/
+/RealestateApiServer/.factorypath
+/RealestateApiServer/.vscode/
+*.log
+
+# =========================
+# Maven Wrapper binary (optional)
+/RealestateApiServer/mvnw
+/RealestateApiServer/mvnw.cmd
+/RealestateApiServer/.mvn/
+
+# =========================
+# React ignores
+# =========================
+/realestate-frontend/node_modules/
+/realestate-frontend/build/
+/realestate-frontend/.env
+/realestate-frontend/.vscode/
+*.log
+
+# =========================
+# OS / IDE
+# =========================
+.DS_Store
+Thumbs.db
+.idea/
