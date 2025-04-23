@@ -11,11 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-import lombok.*;
-@Data
+
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
 public class Agent {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
