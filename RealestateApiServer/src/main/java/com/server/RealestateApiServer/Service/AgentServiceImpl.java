@@ -1,7 +1,9 @@
 package com.server.RealestateApiServer.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.server.RealestateApiServer.Dto.AgentDto;
 import com.server.RealestateApiServer.Entity.Agent;
@@ -15,6 +17,14 @@ public class AgentServiceImpl implements AgentService{
 
 	@Override
 	public Agent registerAgent(AgentDto agentDto) {
+		Agent existingAgent = agentRepository.findByEmail(agentDto.getEmail());
+
+        if (existingAgent != null) {
+            // ⚠️ Built-in Spring way to return a 409 Conflict with message
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered");
+        }
+		
+		
 		Agent agent = new Agent();
         
 		agent.setName(agentDto.getName());
