@@ -1,27 +1,27 @@
-// LoginPage.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api/agents',
-  headers: { 'Content-Type': 'application/json' },
-});
-
 const InputField = ({ label, type, name, value, onChange, error }) => (
-  <div className="mb-4">
-    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor={name}>
-      {label}
-    </label>
+  <div className="relative z-0 w-full mb-6 group">
     <input
-      className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${error ? 'border-red-500' : ''}`}
-      id={name}
       type={type}
       name={name}
+      id={name}
       value={value}
       onChange={onChange}
+      className={`block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 ${
+        error ? 'border-red-500' : 'border-gray-600'
+      } appearance-none focus:outline-none focus:ring-0 focus:border-emerald-400 peer`}
+      placeholder=" "
     />
-    {error && <p className="text-red-500 text-xs italic">{error}</p>}
+    <label
+      htmlFor={name}
+      className="absolute text-sm text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+    >
+      {label}
+    </label>
+    {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
   </div>
 );
 
@@ -53,54 +53,50 @@ const LoginPage = () => {
     }
 
     try {
-        const response = await axios.post('http://localhost:8080/api/agents/login', formData);
-        console.log('Login successful:', response.data);
-        navigate('/dashboard');
+      const response = await axios.post('http://localhost:8080/api/agents/login', formData);
+      localStorage.setItem('user', JSON.stringify(response.data));
+      console.log('Login successful:', response.data);
+      navigate('/dashboard');
     } catch (error) {
       setApiError(error.response?.data?.message || 'Login failed');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Agent Login</h2>
-        </div>
-        <div className="mt-8 space-y-6 bg-white p-6 shadow rounded">
-          {apiError && <p className="text-red-500 text-center">{apiError}</p>}
-          <form onSubmit={handleSubmit}>
-            <InputField
-              label="Email address"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-            />
-            <InputField
-              label="Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-            />
-            <div>
-              <button
-                type="submit"
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Sign in
-              </button>
-            </div>
-          </form>
-          <div className="text-center">
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Don't have an account? Register
-            </Link>
-          </div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f] px-4">
+      <div className="w-full max-w-md p-8 bg-[#1a1a1a] rounded-2xl shadow-2xl">
+        <h2 className="text-2xl font-bold text-center text-white mb-6">Welcome Back</h2>
+        {apiError && <p className="text-red-400 text-sm text-center mb-4">{apiError}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <InputField
+            label="Email address"
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            error={errors.email}
+          />
+          <InputField
+            label="Password"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            error={errors.password}
+          />
+          <button
+            type="submit"
+            className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition duration-300"
+          >
+            Sign In
+          </button>
+        </form>
+        <p className="mt-6 text-center text-sm text-gray-400">
+          Don’t have an account?{' '}
+          <Link to="/register" className="text-emerald-400 hover:underline font-medium">
+            Register
+          </Link>
+        </p>
       </div>
     </div>
   );
