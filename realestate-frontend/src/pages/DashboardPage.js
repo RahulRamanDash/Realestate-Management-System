@@ -2,9 +2,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import HeroWithNavbar from '../components/HeroWithNavbar';
+import HomeNavbar from '../components/HomeNavbar';
 
 const DashboardPage = () => (
 <div>
+  <HomeNavbar/>
   <HeroWithNavbar/>
 
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
