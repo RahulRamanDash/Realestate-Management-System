@@ -1,7 +1,7 @@
-import HeroSlider from "../../../components/HeroSlider";
-import HomeNavbar from "../../../components/HomeNavbar";
+import HeroSlider from "../components/HeroSlider";
+import HomeNavbar from "../components/HomeNavbar";
 
-const AgentDashboard = () => {
+const Home = () => {
     return (
         <>
         <HomeNavbar/>
@@ -16,4 +16,4 @@ const AgentDashboard = () => {
     );
 }
 
-export default AgentDashboard
+export default Home

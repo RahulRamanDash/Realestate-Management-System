@@ -1,9 +1,9 @@
-import HeroSlider from "../components/HeroSlider";
+import HeroSlider from "../../../components/HeroSlider";
 
-const Home = () => {
+const AgentDashboard = () => {
     return (
         <>
-        <HeroSlider 
+        <HeroSlider
         headingText="Welcome Back, Manage Your Properties"
         button1Text="Browse Listings"
         button1Link="/properties"
@@ -12,4 +12,4 @@ const Home = () => {
     );
 }
 
-export default Home
+export default AgentDashboard
