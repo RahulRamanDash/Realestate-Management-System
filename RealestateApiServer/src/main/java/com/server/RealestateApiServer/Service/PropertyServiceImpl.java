@@ -39,7 +39,7 @@ public class PropertyServiceImpl implements PropertyService{
 
     @Override
     public List<Property> findByType(String type) {
-        return propertyRepository.findByType(type)
+        return propertyRepository.findByType(type);
        
     }
 
