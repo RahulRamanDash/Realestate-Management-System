@@ -1,45 +1,44 @@
-name: CI/CD Pipeline
+name: Build and Deploy Frontend
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main  # Deploy when main branch is updated
+
+permissions:
+  contents: write  # Required to push to gh-pages
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
-      - uses: actions/checkout@v3
+      # 1️⃣ Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # 2. Setup Node.js (no caching)
+      # 2️⃣ Setup Node.js 20 (required by react-router >=7)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: '20'
 
-      # 3. Install dependencies inside frontend folder
+      # 3️⃣ Install dependencies
       - name: Install dependencies
-        working-directory: realestate-frontend
         run: npm ci
+        working-directory: ./realestate-frontend
 
-      # 4. Build project
+      # 4️⃣ Build project
       - name: Build project
-        working-directory: realestate-frontend
         run: npm run build
+        working-directory: ./realestate-frontend
 
-      # 5. Deploy to GitHub Pages
+      # 5️⃣ Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./realestate-frontend/dist
           publish_branch: gh-pages
-          publish_dir: realestate-frontend/build
-
-      # 6. Print preview URL
-      - name: Print preview URL
-        run: |
-          BRANCH=${GITHUB_REF_NAME#refs/heads/}
-          echo "Preview URL: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY}/$BRANCH/"
+          # Optional: uncomment if you want to force overwrite
+          # force_orphan: true
