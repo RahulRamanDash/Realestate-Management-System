@@ -14,27 +14,22 @@ jobs:
         node-version: [18.x]
 
     steps:
-      # 1. Checkout repo
       - uses: actions/checkout@v3
 
-      # 2. Setup Node.js
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      # 3. Install dependencies in subfolder
       - name: Install dependencies
         working-directory: realestate-frontend
         run: npm ci
 
-      # 4. Build project
       - name: Build project
         working-directory: realestate-frontend
         run: npm run build
 
-      # 5. Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         if: success()
         uses: peaceiris/actions-gh-pages@v3
@@ -42,9 +37,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: realestate-frontend/build
-          destination_dir: ${{ github.ref_name == 'main' && '' || github.head_ref }}
+          destination_dir: ${{ github.ref_name == 'main' ? '' : github.head_ref }}
 
-      # 6. Show preview URL for PRs
       - name: Show preview URL
         if: github.event_name == 'pull_request'
-        run: echo "Preview URL: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY}/$(echo ${{ github.head_ref }})/"
+        run: echo "Preview URL: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY}/${{ github.head_ref }}/"
