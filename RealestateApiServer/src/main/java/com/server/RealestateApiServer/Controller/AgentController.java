@@ -17,15 +17,14 @@ import com.server.RealestateApiServer.Service.UserService;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/api/agent")
-public class UserController {
-	
+@RequestMapping("/api/")
+public class AgentController {
 	@Autowired
 	private UserService userService;
-    
-	
+
+
 	@PostMapping("/register")
-    public ResponseEntity<User> registerAgent(@RequestBody UserDto userDto) {
+    public ResponseEntity<User> registerUser(@RequestBody UserDto userDto) {
         User agent = userService.registerAgent(userDto);
         return ResponseEntity.ok(agent);
     }
@@ -33,7 +32,7 @@ public class UserController {
 
 	
     @PostMapping("/login")
-    public ResponseEntity<User> loginAgent(@RequestBody @NotNull UserDto userDto) {
+    public ResponseEntity<User> userLogin(@RequestBody @NotNull UserDto userDto) {
         User agent = userService.loginAgent(userDto.getEmail(), userDto.getPassword());
         if (agent != null) {
             return ResponseEntity.ok(agent);

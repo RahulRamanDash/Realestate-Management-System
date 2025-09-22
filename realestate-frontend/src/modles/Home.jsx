@@ -43,10 +43,8 @@ const Home = () => {
                         </p>
                     </motion.div>
                 }
-                button1Text="Agent Portal"
-                button1Link="/agentAuth"
-                button2Text="Start Browsing"
-              button2Link="/properties"
+                button1Text="Start Browsing"
+              button1Link="/properties"
             />
 
             {/* Features Section */}

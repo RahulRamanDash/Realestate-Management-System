@@ -1,14 +1,13 @@
 package com.server.RealestateApiServer.Repository;
 
+import com.server.RealestateApiServer.Entity.Property;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
 import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+public interface PropertyRepository extends MongoRepository<Property, String> {
 
-import com.server.RealestateApiServer.Entity.Property;
-
-public interface PropertyRepository extends JpaRepository<Property, Long>{
-
-    List<Property> findByAgentId(Long agentId);
+    List<Property> findByAgentId(String agentId);
     List<Property> findByCity(String city);
     List<Property> findByType(String type);
     List<Property> findByPriceBetween(double minPrice, double maxPrice);

@@ -7,9 +7,9 @@ import com.server.RealestateApiServer.Entity.Property;
 public interface PropertyService {
 
 
-    Property findById(Long id);
+    Property findById(String id);
     List<Property> findAll();
-    List<Property> findByAgentId(Long agentId);
+    List<Property> findByAgentId(String agentId);
     List<Property> findByCity(String city);
     List<Property> findByType(String type);
     List<Property> findByPriceBetween(double minPrice, double maxPrice);
