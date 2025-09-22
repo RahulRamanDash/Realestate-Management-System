@@ -9,22 +9,19 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x]
 
     steps:
-      # 1. Checkout repository
+      # 1. Checkout repo
       - uses: actions/checkout@v3
 
       # 2. Setup Node.js
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18.x
           cache: 'npm'
 
-      # 3. Install dependencies in subfolder
+      # 3. Install dependencies
       - name: Install dependencies
         working-directory: realestate-frontend
         run: npm ci
@@ -34,17 +31,16 @@ jobs:
         working-directory: realestate-frontend
         run: npm run build
 
-      # 5. Deploy to GitHub Pages
+      # 5. Deploy to GitHub Pages (main branch only)
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ success() }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: realestate-frontend/build
-          destination_dir: ${{ github.ref_name == 'main' ? '' : github.head_ref }}
 
-      # 6. Show preview URL for PRs
-      - name: Show preview URL
-        if: ${{ github.event_name == 'pull_request' }}
-        run: echo "Preview URL: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY}/${{ github.head_ref }}/"
+      # 6. Print preview URL
+      - name: Print preview URL
+        run: |
+          BRANCH=${GITHUB_REF_NAME#refs/heads/}
+          echo "Preview URL: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY}/$BRANCH/"
