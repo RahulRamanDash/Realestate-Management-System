@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { ArrowLeft } from "lucide-react";
 
 const InputField = ({ label, type, name, value, onChange, error }) => (
   <div className="relative z-0 w-full mb-6 group">
@@ -25,17 +26,23 @@ const InputField = ({ label, type, name, value, onChange, error }) => (
   </div>
 );
 
-const AgentAuth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+const UserAuth = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const initialTab = params.get("tab") === "register" ? false : true;
+
+  const [isLogin, setIsLogin] = useState(initialTab);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
+    role: '',
   });
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
   const handleTabChange = (tab) => {
@@ -46,15 +53,18 @@ const AgentAuth = () => {
       phone: '',
       password: '',
       confirmPassword: '',
+      role: '',
     });
     setErrors({});
     setApiError('');
+    setSuccessMessage('');
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: '' });
     setApiError('');
+    setSuccessMessage('');
   };
 
   const validate = () => {
@@ -68,6 +78,7 @@ const AgentAuth = () => {
       } else if (!/^\d{10}$/.test(formData.phone)) {
         newErrors.phone = 'Phone must be exactly 10 digits';
       }
+      if (!formData.role) newErrors.role = 'Role is required';
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Passwords do not match';
       }
@@ -86,23 +97,35 @@ const AgentAuth = () => {
     try {
       if (isLogin) {
         // Login API
-        const response = await axios.post('http://localhost:8080/api/agents/login', {
+        const response = await axios.post('http://localhost:8080/api/login', {
           email: formData.email,
           password: formData.password,
         });
-        localStorage.setItem('user', JSON.stringify(response.data));
+        localStorage.setItem('loggedUser', JSON.stringify(response.data));
         console.log('Login successful:', response.data);
-        navigate('/dashboard');
+        navigate('/dashboard'); // Change route according to your app
       } else {
         // Register API
-        const response = await axios.post('http://localhost:8080/api/agents/register', {
+        await axios.post('http://localhost:8080/api/register', {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
+          role: formData.role,
         });
-        console.log('Registration successful:', response.data);
-        navigate('/login'); // or login automatically if you want
+        console.log('Registration successful');
+        setIsLogin(true);
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          password: '',
+          confirmPassword: '',
+          role: '',
+        });
+        setErrors({});
+        setApiError('');
+        setSuccessMessage('Registration successful! Please login.');
       }
     } catch (error) {
       setApiError(error.response?.data?.message || 'Operation failed');
@@ -110,37 +133,49 @@ const AgentAuth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      {/* Back Button */}
+      <div className="absolute top-4 left-4">
+        <Link
+          to="/"
+          className="flex items-center text-gray-400 hover:text-white transition"
+        >
+          <ArrowLeft className="w-5 h-5 mr-1" />
+          Back to Home
+        </Link>
+      </div>
+
       <div className="w-full max-w-md p-8 bg-gray-800 rounded-2xl shadow-lg border border-gray-700">
-        
         {/* Tabs */}
         <div className="flex mb-6 bg-gray-700 rounded-lg overflow-hidden">
-        <button
+          <button
             onClick={() => handleTabChange('login')}
             className={`w-1/2 py-3 text-md font-semibold transition ${
-            isLogin ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              isLogin ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
-        >
+          >
             Login
-        </button>
-        <button
+          </button>
+          <button
             onClick={() => handleTabChange('register')}
             className={`w-1/2 py-3 text-md font-semibold transition ${
-            !isLogin ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              !isLogin ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
-        >
+          >
             Register
-        </button>
+          </button>
         </div>
 
-
         {/* Title */}
-        <h2 className="text-2xl font-bold text-center text-white mb-6">
-          {isLogin ? 'Welcome Back' : 'Create an Agent Account'}
+        <h2 className="text-2xl font-bold text-center text-white mb-4">
+          {isLogin ? 'Welcome Back' : 'Create an Account'}
         </h2>
 
         {/* API Error */}
         {apiError && <p className="text-red-400 text-sm text-center mb-4">{apiError}</p>}
+
+        {/* Success Message */}
+        {successMessage && <p className="text-emerald-400 text-sm text-center mb-4">{successMessage}</p>}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -162,8 +197,24 @@ const AgentAuth = () => {
                 onChange={handleChange}
                 error={errors.phone}
               />
+              {/* Role select */}
+              <div className="relative z-0 w-full mb-6 group">
+                <label className="block text-sm text-gray-400 mb-1">Role</label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className={`block w-full text-sm text-white bg-gray-700 border border-gray-600 rounded-md px-2 py-2 focus:outline-none focus:border-emerald-400`}
+                >
+                  <option value="">Select Role</option>
+                  <option value="agent">Agent</option>
+                  <option value="buyer">Buyer</option>
+                </select>
+                {errors.role && <p className="mt-1 text-xs text-red-400">{errors.role}</p>}
+              </div>
             </>
           )}
+
           <InputField
             label="Email address"
             type="email"
@@ -203,4 +254,4 @@ const AgentAuth = () => {
   );
 };
 
-export default AgentAuth;
+export default UserAuth;

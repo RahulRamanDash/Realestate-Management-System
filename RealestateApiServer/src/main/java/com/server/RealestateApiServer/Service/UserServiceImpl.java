@@ -6,30 +6,31 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.server.RealestateApiServer.Dto.AgentDto;
+import com.server.RealestateApiServer.Dto.UserDto;
 import com.server.RealestateApiServer.Entity.User;
 
 @Service
-public class AgentServiceImpl implements AgentService{
+public class UserServiceImpl implements UserService {
 	
 	@Autowired
 	private UserRepository userRepository;
 
 	@Override
-	public User registerAgent(AgentDto agentDto) {
-		User existingAgent = userRepository.findByEmail(agentDto.getEmail());
+	public User registerAgent(UserDto userDto) {
+		User existingAgent = userRepository.findByEmail(userDto.getEmail());
 
         if (existingAgent != null) {
             // ⚠️ Built-in Spring way to return a 409 Conflict with message
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered");
         }
-		User agent = new User();
-		agent.setName(agentDto.getName());
-        agent.setEmail(agentDto.getEmail());
-        agent.setPassword(agentDto.getPassword());
-        agent.setPhone(agentDto.getPhone());
+		User user = new User();
+		user.setName(userDto.getName());
+        user.setEmail(userDto.getEmail());
+        user.setPassword(userDto.getPassword());
+        user.setPhone(userDto.getPhone());
+        user.setRole(userDto.getRole());
         
-        return userRepository.save(agent);
+        return userRepository.save(user);
 	}
 
 	@Override

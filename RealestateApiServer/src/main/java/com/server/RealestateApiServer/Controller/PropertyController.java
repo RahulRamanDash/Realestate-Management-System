@@ -31,12 +31,12 @@ public class PropertyController {
    }
 
    @GetMapping("/{id}")
-   public ResponseEntity<Property> getPropertyById(@PathVariable Long id){
+   public ResponseEntity<Property> getPropertyById(@PathVariable String id){
     return ResponseEntity.ok(propertyService.findById(id));
    }
 
    @GetMapping("/agent/{agentId}")
-   public ResponseEntity<List<Property>> getPropertiesByAgentId(@PathVariable Long agentId){
+   public ResponseEntity<List<Property>> getPropertiesByAgentId(@PathVariable String agentId){
     return ResponseEntity.ok(propertyService.findByAgentId(agentId));
    }
 

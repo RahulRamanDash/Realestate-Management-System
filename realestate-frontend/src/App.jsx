@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import AgentAuth from './modles/agent/pages/AgentAuth'
 import { Route, Routes } from 'react-router-dom'
 import Home from './modles/Home'
-import AgentDashboard from './modles/agent/pages/AgentDashboard'
 import PropertyBrowse from './modles/property/pages/PropertyBrowse'
+import UserAuth from './modles/agent/pages/UserAuth'
+import Dashboard from './modles/agent/pages/Dashboard'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -12,8 +12,8 @@ function App() {
     <>
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/agentAuth" element={<AgentAuth />} />
-      <Route path="/agentHome" element={<AgentDashboard />} />
+      <Route path="/userAuth" element={<UserAuth />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/properties" element={<PropertyBrowse />} />
     </Routes>
     </>

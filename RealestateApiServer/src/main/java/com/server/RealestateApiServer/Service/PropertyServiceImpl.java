@@ -15,7 +15,7 @@ public class PropertyServiceImpl implements PropertyService{
     private PropertyRepository propertyRepository;
 
     @Override
-    public Property findById(Long id) {
+    public Property findById(String id) {
         return propertyRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
     }
@@ -27,7 +27,7 @@ public class PropertyServiceImpl implements PropertyService{
     }
 
     @Override
-    public List<Property> findByAgentId(Long agentId) {
+    public List<Property> findByAgentId(String agentId) {
        return propertyRepository.findByAgentId(agentId);
     }
 
