@@ -40,6 +40,11 @@ public class PropertyController {
     return ResponseEntity.ok(propertyService.findByAgentId(agentId));
    }
 
+    @GetMapping("/buyer/{agentId}")
+    public ResponseEntity<List<Property>> getPropertiesByBuyerId(@PathVariable String buyerId) {
+        return ResponseEntity.ok(propertyService.findByBuyerId(buyerId));
+    }
+
    @GetMapping("/city/{city}")
    public ResponseEntity<List<Property>> getPropertiesByCity(@PathVariable String city){
     return ResponseEntity.ok(propertyService.findByCity(city));
@@ -54,5 +59,4 @@ public class PropertyController {
    public ResponseEntity<List<Property>> getPropertiesByPrice(@RequestParam double minPrice, @RequestParam double maxPrice) {
        return ResponseEntity.ok(propertyService.findByPriceBetween(minPrice, maxPrice));
    }
-   
 }
