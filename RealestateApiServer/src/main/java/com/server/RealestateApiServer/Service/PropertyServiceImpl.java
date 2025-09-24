@@ -32,6 +32,11 @@ public class PropertyServiceImpl implements PropertyService{
     }
 
     @Override
+    public List<Property> findByBuyerId(String buyerId) {
+        return propertyRepository.findByBuyerId(buyerId);
+    }
+
+    @Override
     public List<Property> findByCity(String city) {
         return propertyRepository.findByCity(city);
        

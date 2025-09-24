@@ -11,4 +11,5 @@ public interface PropertyRepository extends MongoRepository<Property, String> {
     List<Property> findByCity(String city);
     List<Property> findByType(String type);
     List<Property> findByPriceBetween(double minPrice, double maxPrice);
+    List<Property> findByBuyerId(String agentId);
 }
