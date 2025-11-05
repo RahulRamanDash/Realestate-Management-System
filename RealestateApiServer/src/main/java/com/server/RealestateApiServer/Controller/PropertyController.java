@@ -4,17 +4,10 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.server.RealestateApiServer.Entity.Property;
 import com.server.RealestateApiServer.Service.PropertyService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-
 
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -59,4 +52,9 @@ public class PropertyController {
    public ResponseEntity<List<Property>> getPropertiesByPrice(@RequestParam double minPrice, @RequestParam double maxPrice) {
        return ResponseEntity.ok(propertyService.findByPriceBetween(minPrice, maxPrice));
    }
+
+    public ResponseEntity<Property> addProperty(@RequestBody Property property) {
+        Property savedProperty = propertyService.addProperty(property);
+        return ResponseEntity.ok(savedProperty);
+    }
 }

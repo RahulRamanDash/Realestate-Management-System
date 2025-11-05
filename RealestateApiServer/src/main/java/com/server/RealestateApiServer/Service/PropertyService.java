@@ -3,6 +3,7 @@ package com.server.RealestateApiServer.Service;
 import java.util.List;
 
 import com.server.RealestateApiServer.Entity.Property;
+import org.springframework.web.bind.annotation.RequestBody;
 
 public interface PropertyService {
 
@@ -14,7 +15,7 @@ public interface PropertyService {
     List<Property> findByCity(String city);
     List<Property> findByType(String type);
     List<Property> findByPriceBetween(double minPrice, double maxPrice);
-
+    Property addProperty(Property property);
 
 
 }

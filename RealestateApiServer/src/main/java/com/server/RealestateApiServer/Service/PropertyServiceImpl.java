@@ -54,7 +54,9 @@ public class PropertyServiceImpl implements PropertyService{
        
     }
 
-
-    
+    @Override
+    public Property addProperty(Property property) {
+        return propertyRepository.save(property);
+    }
 
 }
