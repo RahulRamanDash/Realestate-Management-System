@@ -1,7 +1,10 @@
 
 package com.server.RealestateApiServer.Controller;
 
-import org.jetbrains.annotations.NotNull;
+import com.server.RealestateApiServer.Dto.AuthRequest;
+import com.server.RealestateApiServer.Dto.AuthResponse;
+import com.server.RealestateApiServer.Dto.RefreshRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -17,27 +20,24 @@ import com.server.RealestateApiServer.Service.UserService;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/api/")
-public class AgentController {
+@RequestMapping("/api/auth")
+public class UserController {
 	@Autowired
 	private UserService userService;
 
 
 	@PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody UserDto userDto) {
-        User agent = userService.registerAgent(userDto);
-        return ResponseEntity.ok(agent);
+        return ResponseEntity.ok(userService.register(userDto));
     }
 
-
-	
     @PostMapping("/login")
-    public ResponseEntity<User> userLogin(@RequestBody @NotNull UserDto userDto) {
-        User agent = userService.loginAgent(userDto.getEmail(), userDto.getPassword());
-        if (agent != null) {
-            return ResponseEntity.ok(agent);
-        } else {
-            return ResponseEntity.status(401).build();
-        }
+    public ResponseEntity<AuthResponse> userLogin(@Valid @RequestBody AuthRequest request) {
+        return ResponseEntity.ok(userService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        return ResponseEntity.ok(userService.refresh(request));
     }
 }
