@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User } from "lucide-react"; // profile icon
 
-const DashboardNavbar = ({ role }) => {
+const DashboardNavbar = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -12,13 +12,13 @@ const DashboardNavbar = ({ role }) => {
 
   // Menu items by role
   const menuItems = {
-    agent: [
+    ROLE_AGENT: [
       { name: "Dashboard", link: "/agent/dashboard" },
       { name: "My Listings", link: "/agent/listings" },
       { name: "Add Property", link: "/agent/add-property" },
       { name: "Analytics", link: "/agent/analytics" },
     ],
-    buyer: [
+    ROLE_BUYER: [
       { name: "Dashboard", link: "/buyer/dashboard" },
       { name: "Browse Properties", link: "/buyer/properties" },
       { name: "Saved Listings", link: "/buyer/saved" },
@@ -52,7 +52,7 @@ const DashboardNavbar = ({ role }) => {
 
         {/* Desktop Menu */}
         <ul className="hidden lg:flex space-x-6 text-sm font-medium">
-          {menuItems[role]?.map((item, idx) => (
+          {menuItems[user?.role]?.map((item, idx) => (
             <li key={idx}>
               <Link
                 to={item.link}

@@ -53,6 +53,7 @@ public class PropertyController {
        return ResponseEntity.ok(propertyService.findByPriceBetween(minPrice, maxPrice));
    }
 
+   @PostMapping
     public ResponseEntity<Property> addProperty(@RequestBody Property property) {
         Property savedProperty = propertyService.addProperty(property);
         return ResponseEntity.ok(savedProperty);
