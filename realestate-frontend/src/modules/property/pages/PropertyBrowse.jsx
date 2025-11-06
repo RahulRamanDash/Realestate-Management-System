@@ -3,6 +3,8 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaSearch, FaFilter, FaHome, FaBed, FaBath, FaRuler } from 'react-icons/fa';
 import HomeNavbar from '../../../components/HomeNavbar';
+import DashboardNavbar from '../../../components/DashboardNavbar';
+import api from '../../../api/axiosInstance';
 
 const PropertyBrowse = () => {
     const [properties, setProperties] = useState([]);
@@ -14,19 +16,34 @@ const PropertyBrowse = () => {
         maxPrice: ''
     });
 
+    const backendUrl = "http://localhost:8080";
+
     // Fetch properties
+    // useEffect(() => {
+    //     const fetchProperties = async () => {
+    //         try {
+    //             const response = await axios.get(`${backendUrl}/api/properties`);
+    //             setProperties(response.data);
+    //             console.log('Fetched properties:', response.data);
+    //             setLoading(false);
+    //         } catch (error) {
+    //             console.error('Error fetching properties:', error);
+    //             setLoading(false);
+    //         }
+    //     };
+    //     fetchProperties();
+    // }, []);
     useEffect(() => {
-        const fetchProperties = async () => {
-            try {
-                const response = await axios.get('http://localhost:8080/api/properties');
-                setProperties(response.data);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching properties:', error);
-                setLoading(false);
-            }
-        };
-        fetchProperties();
+        api
+        .get("/properties")
+        .then((res) => {
+            setProperties(res.data);
+            setLoading(false);
+        })
+        .catch((err) => {
+            console.error(err);
+            setLoading(false);
+        });
     }, []);
 
     // Handle filter changes
@@ -48,9 +65,13 @@ const PropertyBrowse = () => {
         );
     });
 
+    const user = JSON.parse(localStorage.getItem("loggedUser"));
+    console.log("Logged user: ", user);
+
     return (
         <div className="min-h-screen bg-gray-900">
-            <HomeNavbar />
+
+            {user ? <DashboardNavbar /> : <HomeNavbar />}
             
             {/* Search and Filter Section */}
             <div className="bg-gray-800 py-6">
@@ -123,11 +144,16 @@ const PropertyBrowse = () => {
                             >
                                 {/* Property Image */}
                                 <div className="relative h-48">
-                                    <img
-                                        src={property.imageUrl || 'https://via.placeholder.com/400x300'}
+                                    {/* <img
+                                        src={property.imageUrls[0]}
                                         alt={property.title}
                                         className="w-full h-full object-cover"
+                                    /> */}
+                                    <img
+                                    src={property.imageUrls?.[0] ? `${backendUrl}${property.imageUrls[0]}` : `${backendUrl}/uploads/images/Hotel-Marigold.jpg`}
+                                    alt={property.title}
                                     />
+
                                     <div className="absolute top-4 right-4 bg-emerald-500 text-white px-2 py-1 rounded">
                                         ${property.price.toLocaleString()}
                                     </div>

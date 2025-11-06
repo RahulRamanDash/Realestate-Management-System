@@ -97,16 +97,25 @@ const UserAuth = () => {
     try {
       if (isLogin) {
         // Login API
-        const response = await axios.post('http://localhost:8080/api/login', {
+        const response = await axios.post('http://localhost:8080/api/auth/login', {
           email: formData.email,
           password: formData.password,
         });
-        localStorage.setItem('loggedUser', JSON.stringify(response.data));
+        const data = response.data;
+        // Store JWT tokens & user info in localStorage
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        localStorage.setItem("loggedUser", JSON.stringify({
+          id: data.userId,
+          name: data.name,
+          email: data.email,
+          role: data.role
+        }));
         console.log('Login successful:', response.data);
         navigate('/dashboard'); // Change route according to your app
       } else {
         // Register API
-        await axios.post('http://localhost:8080/api/register', {
+        await axios.post('http://localhost:8080/api/auth/register', {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
@@ -207,8 +216,8 @@ const UserAuth = () => {
                   className={`block w-full text-sm text-white bg-gray-700 border border-gray-600 rounded-md px-2 py-2 focus:outline-none focus:border-emerald-400`}
                 >
                   <option value="">Select Role</option>
-                  <option value="agent">Agent</option>
-                  <option value="buyer">Buyer</option>
+                  <option value="ROLE_AGENT">Agent</option>
+                  <option value="ROLE_BUYER">Buyer</option>
                 </select>
                 {errors.role && <p className="mt-1 text-xs text-red-400">{errors.role}</p>}
               </div>

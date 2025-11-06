@@ -5,7 +5,7 @@ const Dashboard = () => {
     return (
         <>
          <div className="bg-[#0f0f0f] text-white">
-            <DashboardNavbar role="agent" />
+            <DashboardNavbar />
             {/* buyer content */}
         <HeroSlider
         headingText="Welcome Back, Manage Your Properties"
@@ -17,4 +17,4 @@ const Dashboard = () => {
     );
 }
 
-export default Dashboard
+export default Dashboard;
