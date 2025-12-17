@@ -13,16 +13,16 @@ const DashboardNavbar = () => {
   // Menu items by role
   const menuItems = {
     ROLE_AGENT: [
-      { name: "Dashboard", link: "/agent/dashboard" },
-      { name: "My Listings", link: "/agent/listings" },
-      { name: "Add Property", link: "/agent/add-property" },
-      { name: "Analytics", link: "/agent/analytics" },
+      { name: "Dashboard", link: "/dashboard" },
+      { name: "My Listings", link: "/listings" },
+      { name: "Add Property", link: "/add-property" },
+      { name: "Analytics", link: "/analytics" },
     ],
     ROLE_BUYER: [
-      { name: "Dashboard", link: "/buyer/dashboard" },
-      { name: "Browse Properties", link: "/buyer/properties" },
-      { name: "Saved Listings", link: "/buyer/saved" },
-      { name: "Contact Agents", link: "/buyer/agents" },
+      { name: "Dashboard", link: "/dashboard" },
+      { name: "Browse Properties", link: "/properties" },
+      { name: "Saved Listings", link: "/saved" },
+      { name: "Contact Agents", link: "/agents" },
     ],
   };
 
