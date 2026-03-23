@@ -113,7 +113,7 @@ The system uses a relational database with the following main entities:
 ### Prerequisites
 - Java 17
 - Node.js (for frontend)
-- MySQL
+- MongoDB
 - Docker (optional)
 
 ### Backend Setup
@@ -129,10 +129,9 @@ The system uses a relational database with the following main entities:
    ./mvnw spring-boot:run
    ```
 
-   Or using Docker:
+   Or use the Docker Compose deployment from the project root:
    ```bash
-   docker build -t real-estate .
-   docker run -p 8080:8080 real-estate
+   docker compose up --build
    ```
 
 ### Frontend Setup
@@ -153,12 +152,33 @@ The system uses a relational database with the following main entities:
 
 ## Deployment
 
-The application can be deployed using Docker containers. Both frontend and backend have their own Dockerfiles for containerization.
+The repo includes a full Docker Compose deployment for:
+- MongoDB
+- Spring Boot backend
+- React frontend served by nginx
 
-### Backend Deployment
+Run everything from the project root:
+
 ```bash
-docker build -t real-estate .
-docker run -p 8080:8080 real-estate
+cp .env.example .env
+docker compose up --build
+```
+
+Services:
+- Frontend: `http://localhost:${FRONTEND_PORT:-3000}`
+- Backend API: `http://localhost:${BACKEND_PORT:-8080}/api`
+- MongoDB: `localhost:${MONGO_PORT:-27017}`
+
+The Compose setup now includes:
+- `unless-stopped` restart policy for all services
+- healthchecks for MongoDB, backend, and frontend
+- service startup ordering based on health
+- configurable ports and secrets through `.env`
+
+Optional:
+```bash
+export SECURITY_JWT_SECRET="your-strong-secret"
+docker compose up --build
 ```
 
 ## API Documentation

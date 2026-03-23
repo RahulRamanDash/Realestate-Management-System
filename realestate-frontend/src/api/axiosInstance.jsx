@@ -1,7 +1,10 @@
 import axios from "axios";
+import { normalizeRole } from "../utils/auth";
+
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: `${API_BASE_URL}/api`,
 });
 
 // Attach Access Token to every request
@@ -30,13 +33,23 @@ api.interceptors.response.use(
         const data = res.data;
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("refreshToken", data.refreshToken);
+        const storedUser = localStorage.getItem("loggedUser");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          localStorage.setItem(
+            "loggedUser",
+            JSON.stringify({
+              ...parsedUser,
+              role: normalizeRole(parsedUser.role),
+            })
+          );
+        }
 
         originalRequest.headers["Authorization"] = `Bearer ${data.accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, logout user
         localStorage.clear();
-        window.location.href = "/login";
+        window.location.href = "/userAuth";
       }
     }
     return Promise.reject(error);

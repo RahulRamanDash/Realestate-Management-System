@@ -1,204 +1,343 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
-import { FaSearch, FaFilter, FaHome, FaBed, FaBath, FaRuler } from 'react-icons/fa';
-import HomeNavbar from '../../../components/HomeNavbar';
-import DashboardNavbar from '../../../components/DashboardNavbar';
-import api from '../../../api/axiosInstance';
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import api from "../../../api/axiosInstance";
+import DashboardNavbar from "../../../components/DashboardNavbar";
+import HomeNavbar from "../../../components/HomeNavbar";
+import PropertyCard from "../components/PropertyCard";
+import { getLoggedUser, isBuyer } from "../../../utils/auth";
+
+const initialFilters = {
+  city: "",
+  type: "",
+  availability: "",
+  minPrice: "",
+  maxPrice: "",
+};
+
+const hasActiveFilters = (filters) =>
+  Object.values(filters).some((value) => String(value || "").trim() !== "");
 
 const PropertyBrowse = () => {
-    const [properties, setProperties] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState({
-        city: '',
-        type: '',
-        minPrice: '',
-        maxPrice: ''
-    });
+  const navigate = useNavigate();
+  const user = getLoggedUser();
+  const [properties, setProperties] = useState([]);
+  const [filters, setFilters] = useState(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
+  const [page, setPage] = useState(0);
+  const [pageMeta, setPageMeta] = useState({
+    totalElements: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrevious: false,
+    size: 9,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
+  const [buyingId, setBuyingId] = useState("");
 
-    const backendUrl = "http://localhost:8080";
+  useEffect(() => {
+    const fetchProperties = async () => {
+      setLoading(true);
+      setError("");
 
-    // Fetch properties
-    // useEffect(() => {
-    //     const fetchProperties = async () => {
-    //         try {
-    //             const response = await axios.get(`${backendUrl}/api/properties`);
-    //             setProperties(response.data);
-    //             console.log('Fetched properties:', response.data);
-    //             setLoading(false);
-    //         } catch (error) {
-    //             console.error('Error fetching properties:', error);
-    //             setLoading(false);
-    //         }
-    //     };
-    //     fetchProperties();
-    // }, []);
-    useEffect(() => {
-        api
-        .get("/properties")
-        .then((res) => {
-            setProperties(res.data);
-            setLoading(false);
-        })
-        .catch((err) => {
-            console.error(err);
-            setLoading(false);
+      try {
+        const params = {
+          page,
+          size: pageMeta.size,
+        };
+
+        if (appliedFilters.city) params.city = appliedFilters.city;
+        if (appliedFilters.type) params.type = appliedFilters.type;
+        if (appliedFilters.availability) params.availability = appliedFilters.availability;
+        if (appliedFilters.minPrice) params.minPrice = appliedFilters.minPrice;
+        if (appliedFilters.maxPrice) params.maxPrice = appliedFilters.maxPrice;
+
+        const response = await api.get("/properties/search", { params });
+        const data = response.data || {};
+        setProperties(Array.isArray(data.content) ? data.content : []);
+        setPageMeta({
+          totalElements: data.totalElements || 0,
+          totalPages: data.totalPages || 0,
+          hasNext: Boolean(data.hasNext),
+          hasPrevious: Boolean(data.hasPrevious),
+          size: data.size || 9,
         });
-    }, []);
-
-    // Handle filter changes
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({
-            ...prev,
-            [name]: value
-        }));
+      } catch (fetchError) {
+        console.error("Failed to load properties:", fetchError);
+        setError("Unable to load properties right now.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // Filter properties
-    const filteredProperties = properties.filter(property => {
-        return (
-            (!filters.city || property.city.toLowerCase().includes(filters.city.toLowerCase())) &&
-            (!filters.type || property.type === filters.type) &&
-            (!filters.minPrice || property.price >= parseFloat(filters.minPrice)) &&
-            (!filters.maxPrice || property.price <= parseFloat(filters.maxPrice))
-        );
-    });
+    fetchProperties();
+  }, [appliedFilters, page, pageMeta.size]);
 
-    const user = JSON.parse(localStorage.getItem("loggedUser"));
-    console.log("Logged user: ", user);
+  const handleFilterChange = (event) => {
+    const { name, value } = event.target;
+    setFilters((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
 
-    return (
-        <div className="min-h-screen bg-gray-900">
+  const clearFilters = () => {
+    setFilters(initialFilters);
+    setAppliedFilters(initialFilters);
+    setPage(0);
+  };
 
-            {user ? <DashboardNavbar /> : <HomeNavbar />}
-            
-            {/* Search and Filter Section */}
-            <div className="bg-gray-800 py-6">
-                <div className="max-w-7xl mx-auto px-4">
-                    <div className="flex flex-wrap gap-4 items-center justify-between">
-                        {/* Search Bar */}
-                        <div className="flex-1 min-w-[300px]">
-                            <div className="relative">
-                                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="text"
-                                    name="city"
-                                    placeholder="Search by city..."
-                                    className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                    value={filters.city}
-                                    onChange={handleFilterChange}
-                                />
-                            </div>
-                        </div>
+  const canSearch = hasActiveFilters(filters);
+  const showResultsCount = hasActiveFilters(appliedFilters);
 
-                        {/* Filters */}
-                        <div className="flex flex-wrap gap-4">
-                            <select
-                                name="type"
-                                className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                value={filters.type}
-                                onChange={handleFilterChange}
-                            >
-                                <option value="">All Types</option>
-                                <option value="Apartment">Apartment</option>
-                                <option value="House">House</option>
-                                <option value="Villa">Villa</option>
-                            </select>
+  const applyFilters = () => {
+    if (!canSearch) {
+      return;
+    }
 
-                            <input
-                                type="number"
-                                name="minPrice"
-                                placeholder="Min Price"
-                                className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                value={filters.minPrice}
-                                onChange={handleFilterChange}
-                            />
+    setAppliedFilters(filters);
+    setPage(0);
+  };
 
-                            <input
-                                type="number"
-                                name="maxPrice"
-                                placeholder="Max Price"
-                                className="bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                value={filters.maxPrice}
-                                onChange={handleFilterChange}
-                            />
-                        </div>
-                    </div>
+  const handleBuy = async (property) => {
+    const propertyId = property?.id || property?._id;
+
+    if (!user) {
+      navigate("/userAuth");
+      return;
+    }
+
+    if (!isBuyer(user) || !propertyId) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Buy "${property.title}" for ${property.price ? `$${Number(property.price).toLocaleString()}` : "the listed price"}?`);
+    if (!confirmed) {
+      return;
+    }
+
+    setBuyingId(propertyId);
+    setActionMessage("");
+
+    try {
+      const response = await api.patch(`/properties/${propertyId}/purchase/${user.id}`);
+      const updatedProperty = response.data;
+      setProperties((current) =>
+        current.map((item) => ((item.id || item._id) === propertyId ? updatedProperty : item))
+      );
+      setActionMessage("Property purchased successfully. It is now visible in your owned properties.");
+    } catch (purchaseError) {
+      console.error("Failed to purchase property:", purchaseError);
+      setActionMessage("Unable to complete this purchase right now.");
+    } finally {
+      setBuyingId("");
+    }
+  };
+
+  return (
+    <div className="page-shell">
+      {user ? <DashboardNavbar /> : <HomeNavbar />}
+
+      <main className="section-shell px-4 pb-16 pt-10">
+        <div className="mx-auto max-w-7xl space-y-8">
+          <section className="glass-panel rounded-[2rem] p-5 sm:p-6">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-200">
+                  <SlidersHorizontal className="h-5 w-5" />
                 </div>
+                <div>
+                  <p className="page-heading text-sm font-semibold">Browse listings</p>
+                  <p className="page-copy text-sm">Search and apply filters.</p>
+                </div>
+              </div>
+              {showResultsCount && (
+                <p className="page-copy pt-2 text-base font-semibold whitespace-nowrap">
+                  {pageMeta.totalElements} records found
+                </p>
+              )}
             </div>
 
-            {/* Properties Grid */}
-            <div className="max-w-7xl mx-auto px-4 py-12">
-                {loading ? (
-                    <div className="text-center text-white">Loading properties...</div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredProperties.map((property, index) => (
-                            <motion.div
-                                key={property.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: index * 0.1 }}
-                                className="bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
-                            >
-                                {/* Property Image */}
-                                <div className="relative h-48">
-                                    {/* <img
-                                        src={property.imageUrls[0]}
-                                        alt={property.title}
-                                        className="w-full h-full object-cover"
-                                    /> */}
-                                    <img
-                                    src={property.imageUrls?.[0] ? `${backendUrl}${property.imageUrls[0]}` : `${backendUrl}/uploads/images/Hotel-Marigold.jpg`}
-                                    alt={property.title}
-                                    />
+            <div className="grid gap-3 lg:grid-cols-[1.35fr_0.85fr_0.85fr_0.85fr_0.85fr_auto_auto]">
+              <div className="space-y-2">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">City</label>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    name="city"
+                    placeholder="Search by city"
+                    value={filters.city}
+                    onChange={handleFilterChange}
+                    className="field-base py-4 pl-11 pr-4"
+                  />
+                </div>
+              </div>
 
-                                    <div className="absolute top-4 right-4 bg-emerald-500 text-white px-2 py-1 rounded">
-                                        ${property.price.toLocaleString()}
-                                    </div>
-                                </div>
+              <div className="space-y-2">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">Type</label>
+                <select
+                  name="type"
+                  value={filters.type}
+                  onChange={handleFilterChange}
+                  className="field-base px-4 py-4"
+                >
+                  <option value="">All types</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="House">House</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Plot">Plot</option>
+                </select>
+              </div>
 
-                                {/* Property Details */}
-                                <div className="p-4">
-                                    <h3 className="text-xl font-semibold text-white mb-2">{property.title}</h3>
-                                    <p className="text-gray-400 mb-4">{property.address}</p>
+              <div className="space-y-2">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">Available</label>
+                <select
+                  name="availability"
+                  value={filters.availability}
+                  onChange={handleFilterChange}
+                  className="field-base px-4 py-4"
+                >
+                  <option value="">All</option>
+                  <option value="available">Available</option>
+                  <option value="sold">Sold</option>
+                </select>
+              </div>
 
-                                    {/* Property Features */}
-                                    <div className="flex items-center gap-4 text-gray-400">
-                                        <div className="flex items-center gap-1">
-                                            <FaBed />
-                                            <span>3 Beds</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <FaBath />
-                                            <span>2 Baths</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <FaRuler />
-                                            <span>1,200 sqft</span>
-                                        </div>
-                                    </div>
+              <div className="space-y-2">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">Min Price</label>
+                <input
+                  type="number"
+                  name="minPrice"
+                  placeholder="Min price"
+                  value={filters.minPrice}
+                  onChange={handleFilterChange}
+                  className="field-base px-4 py-4"
+                />
+              </div>
 
-                                    {/* Contact Button */}
-                                    <button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded transition duration-300">
-                                        Contact Agent
-                                    </button>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                )}
+              <div className="space-y-2">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">Max Price</label>
+                <input
+                  type="number"
+                  name="maxPrice"
+                  placeholder="Max price"
+                  value={filters.maxPrice}
+                  onChange={handleFilterChange}
+                  className="field-base px-4 py-4"
+                />
+              </div>
 
-                {/* No Results Message */}
-                {!loading && filteredProperties.length === 0 && (
-                    <div className="text-center text-gray-400">
-                        No properties found matching your criteria.
-                    </div>
-                )}
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={applyFilters}
+                  disabled={!canSearch}
+                  className={`w-full whitespace-nowrap px-5 py-4 lg:w-auto ${
+                    canSearch
+                      ? "primary-button"
+                      : "cursor-not-allowed rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-slate-400 opacity-70"
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Search className="h-4 w-4" />
+                    Search
+                  </span>
+                </button>
+              </div>
+
+              <div className="flex items-end">
+                <button type="button" onClick={clearFilters} className="secondary-button w-full whitespace-nowrap px-5 py-4 lg:w-auto">
+                  Reset
+                </button>
+              </div>
             </div>
+          </section>
+
+          {actionMessage && (
+            <section
+              className={`rounded-[1.5rem] px-5 py-4 text-sm ${
+                actionMessage.includes("successfully") ? "status-success" : "status-error"
+              }`}
+            >
+              {actionMessage}
+            </section>
+          )}
+
+          {loading && (
+            <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="market-card">
+                  <div className="h-56 animate-pulse inset-panel" />
+                  <div className="space-y-3 p-5">
+                    <div className="h-5 animate-pulse rounded inset-panel" />
+                    <div className="h-4 animate-pulse rounded inset-panel" />
+                    <div className="h-20 animate-pulse rounded inset-panel" />
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+
+          {!loading && error && (
+            <section className="status-error rounded-[2rem] px-6 py-12 text-center">
+              {error}
+            </section>
+          )}
+
+          {!loading && !error && pageMeta.totalElements === 0 && (
+            <section className="status-neutral rounded-[2rem] px-6 py-12 text-center">
+              No properties matched the current filters.
+            </section>
+          )}
+
+          {!loading && !error && properties.length > 0 && (
+            <>
+              <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {properties.map((property) => (
+                  <PropertyCard
+                    key={property.id || property._id}
+                    property={property}
+                    user={user}
+                    onBuy={handleBuy}
+                    actionLoading={buyingId === (property.id || property._id)}
+                  />
+                ))}
+              </section>
+
+              {pageMeta.totalPages > 1 && (
+                <section className="flex flex-col items-center justify-center gap-4 pt-2 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => Math.max(current - 1, 0))}
+                    disabled={!pageMeta.hasPrevious}
+                    className="secondary-button disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </button>
+                  <p className="page-copy text-sm font-semibold">
+                    Page {page + 1} of {pageMeta.totalPages}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => current + 1)}
+                    disabled={!pageMeta.hasNext}
+                    className="secondary-button disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </section>
+              )}
+            </>
+          )}
         </div>
-    );
+      </main>
+    </div>
+  );
 };
 
 export default PropertyBrowse;
