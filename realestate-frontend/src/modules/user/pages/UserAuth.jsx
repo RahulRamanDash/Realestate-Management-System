@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { ArrowLeft } from "lucide-react";
+import React, { useState } from "react";
+import axios from "axios";
+import { ArrowLeft, BadgeCheck, Building2, Shield, UserCircle2 } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { normalizeRole } from "../../../utils/auth";
 
 const InputField = ({ label, type, name, value, onChange, error }) => (
   <div className="relative z-0 w-full mb-6 group">
@@ -11,14 +12,16 @@ const InputField = ({ label, type, name, value, onChange, error }) => (
       id={name}
       value={value}
       onChange={onChange}
-      className={`block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 ${
-        error ? 'border-red-500' : 'border-gray-600'
-      } appearance-none focus:outline-none focus:ring-0 focus:border-emerald-400 peer`}
+      className={`field-base block w-full appearance-none px-4 pb-3 pt-6 text-sm ${error ? "border-red-500" : ""} peer`}
       placeholder=" "
     />
     <label
       htmlFor={name}
-      className="absolute text-sm text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+      className={`pointer-events-none absolute left-3 z-10 origin-[0] rounded-md px-2 text-sm text-gray-400 transition-all duration-200 ${
+        value
+          ? "top-0 -translate-y-1/2 scale-75 bg-[#102420]"
+          : "top-1/2 -translate-y-1/2 scale-100 bg-transparent"
+      } peer-focus:top-0 peer-focus:-translate-y-1/2 peer-focus:scale-75 peer-focus:bg-[#102420]`}
     >
       {label}
     </label>
@@ -33,54 +36,54 @@ const UserAuth = () => {
 
   const [isLogin, setIsLogin] = useState(initialTab);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    role: '',
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+    role: "",
   });
   const [errors, setErrors] = useState({});
-  const [apiError, setApiError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [apiError, setApiError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
   const handleTabChange = (tab) => {
-    setIsLogin(tab === 'login');
+    setIsLogin(tab === "login");
     setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      password: '',
-      confirmPassword: '',
-      role: '',
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+      role: "",
     });
     setErrors({});
-    setApiError('');
-    setSuccessMessage('');
+    setApiError("");
+    setSuccessMessage("");
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: '' });
-    setApiError('');
-    setSuccessMessage('');
+    setErrors({ ...errors, [e.target.name]: "" });
+    setApiError("");
+    setSuccessMessage("");
   };
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.email) newErrors.email = 'Email is required';
-    if (!formData.password) newErrors.password = 'Password is required';
+    if (!formData.email) newErrors.email = "Email is required";
+    if (!formData.password) newErrors.password = "Password is required";
     if (!isLogin) {
-      if (!formData.name) newErrors.name = 'Name is required';
+      if (!formData.name) newErrors.name = "Name is required";
       if (!formData.phone) {
-        newErrors.phone = 'Phone number is required';
+        newErrors.phone = "Phone number is required";
       } else if (!/^\d{10}$/.test(formData.phone)) {
-        newErrors.phone = 'Phone must be exactly 10 digits';
+        newErrors.phone = "Phone must be exactly 10 digits";
       }
-      if (!formData.role) newErrors.role = 'Role is required';
+      if (!formData.role) newErrors.role = "Role is required";
       if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
+        newErrors.confirmPassword = "Passwords do not match";
       }
     }
     return newErrors;
@@ -96,168 +99,170 @@ const UserAuth = () => {
 
     try {
       if (isLogin) {
-        // Login API
-        const response = await axios.post('http://localhost:8080/api/auth/login', {
+        const response = await axios.post("http://localhost:8080/api/auth/login", {
           email: formData.email,
           password: formData.password,
         });
+
         const data = response.data;
-        // Store JWT tokens & user info in localStorage
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("refreshToken", data.refreshToken);
-        localStorage.setItem("loggedUser", JSON.stringify({
-          id: data.userId,
-          name: data.name,
-          email: data.email,
-          role: data.role
-        }));
-        console.log('Login successful:', response.data);
-        navigate('/dashboard'); // Change route according to your app
+        localStorage.setItem(
+          "loggedUser",
+          JSON.stringify({
+            id: data.userId,
+            name: data.name,
+            email: data.email,
+            role: normalizeRole(data.role),
+          })
+        );
+        navigate("/dashboard");
       } else {
-        // Register API
-        await axios.post('http://localhost:8080/api/auth/register', {
+        await axios.post("http://localhost:8080/api/auth/register", {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
           password: formData.password,
           role: formData.role,
         });
-        console.log('Registration successful');
         setIsLogin(true);
         setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          password: '',
-          confirmPassword: '',
-          role: '',
+          name: "",
+          email: "",
+          phone: "",
+          password: "",
+          confirmPassword: "",
+          role: "",
         });
         setErrors({});
-        setApiError('');
-        setSuccessMessage('Registration successful! Please login.');
+        setApiError("");
+        setSuccessMessage("Registration successful! Please login.");
       }
     } catch (error) {
-      setApiError(error.response?.data?.message || 'Operation failed');
+      setApiError(error.response?.data?.message || "Operation failed");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
-      {/* Back Button */}
-      <div className="absolute top-4 left-4">
-        <Link
-          to="/"
-          className="flex items-center text-gray-400 hover:text-white transition"
-        >
-          <ArrowLeft className="w-5 h-5 mr-1" />
+    <div className="page-shell min-h-screen px-4 py-8">
+      <div className="mx-auto max-w-7xl">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-300 transition hover:text-white">
+          <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Link>
-      </div>
 
-      <div className="w-full max-w-md p-8 bg-gray-800 rounded-2xl shadow-lg border border-gray-700">
-        {/* Tabs */}
-        <div className="flex mb-6 bg-gray-700 rounded-lg overflow-hidden">
-          <button
-            onClick={() => handleTabChange('login')}
-            className={`w-1/2 py-3 text-md font-semibold transition ${
-              isLogin ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            Login
-          </button>
-          <button
-            onClick={() => handleTabChange('register')}
-            className={`w-1/2 py-3 text-md font-semibold transition ${
-              !isLogin ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
-          >
-            Register
-          </button>
-        </div>
+        <div className="mt-6 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="glass-panel rounded-[2rem] p-8 lg:p-10">
+            <span className="eyebrow">Access Portal</span>
+            <h1 className="headline-font page-heading mt-6 text-4xl font-bold md:text-5xl">
+              {isLogin ? "Return to your property workspace." : "Create your account and start using the platform."}
+            </h1>
+            <p className="page-copy mt-4 text-base leading-7">
+              Agents can publish and manage listings, while buyers get a cleaner path to explore verified inventory.
+            </p>
 
-        {/* Title */}
-        <h2 className="text-2xl font-bold text-center text-white mb-4">
-          {isLogin ? 'Welcome Back' : 'Create an Account'}
-        </h2>
+            <div className="mt-8 space-y-4">
+              {[
+                { icon: <Shield className="h-5 w-5" />, title: "Secure access", text: "Login and registration are grouped into a single cleaner workspace." },
+                { icon: <Building2 className="h-5 w-5" />, title: "Role-aware experience", text: "The interface adjusts for agents and buyers after sign-in." },
+                { icon: <BadgeCheck className="h-5 w-5" />, title: "Clearer trust cues", text: "Consistent styling helps the product feel more reliable from the first screen." },
+              ].map((item) => (
+                <div key={item.title} className="info-card rounded-[1.5rem] p-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-200">
+                    {item.icon}
+                  </div>
+                  <h3 className="page-heading mt-4 text-lg font-semibold">{item.title}</h3>
+                  <p className="page-copy mt-2 text-sm leading-6">{item.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        {/* API Error */}
-        {apiError && <p className="text-red-400 text-sm text-center mb-4">{apiError}</p>}
+          <div className="glass-panel-strong w-full rounded-[2rem] p-8 shadow-lg">
+            <div className="mb-6 flex rounded-full border border-white/10 bg-white/5 p-1">
+              <button
+                onClick={() => handleTabChange("login")}
+                className={`w-1/2 rounded-full py-3 text-md font-semibold transition ${
+                  isLogin ? "bg-emerald-400 text-slate-950" : "text-gray-300 hover:bg-white/5"
+                }`}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => handleTabChange("register")}
+                className={`w-1/2 rounded-full py-3 text-md font-semibold transition ${
+                  !isLogin ? "bg-emerald-400 text-slate-950" : "text-gray-300 hover:bg-white/5"
+                }`}
+              >
+                Register
+              </button>
+            </div>
 
-        {/* Success Message */}
-        {successMessage && <p className="text-emerald-400 text-sm text-center mb-4">{successMessage}</p>}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
-            <>
-              <InputField
-                label="Name"
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                error={errors.name}
-              />
-              <InputField
-                label="Phone number"
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                error={errors.phone}
-              />
-              {/* Role select */}
-              <div className="relative z-0 w-full mb-6 group">
-                <label className="block text-sm text-gray-400 mb-1">Role</label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className={`block w-full text-sm text-white bg-gray-700 border border-gray-600 rounded-md px-2 py-2 focus:outline-none focus:border-emerald-400`}
-                >
-                  <option value="">Select Role</option>
-                  <option value="ROLE_AGENT">Agent</option>
-                  <option value="ROLE_BUYER">Buyer</option>
-                </select>
-                {errors.role && <p className="mt-1 text-xs text-red-400">{errors.role}</p>}
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-200">
+                <UserCircle2 className="h-6 w-6" />
               </div>
-            </>
-          )}
+              <div>
+                <h2 className="page-heading text-2xl font-bold">{isLogin ? "Welcome Back" : "Create an Account"}</h2>
+                <p className="page-copy text-sm">
+                  {isLogin ? "Sign in to continue." : "Register to access listings and dashboards."}
+                </p>
+              </div>
+            </div>
 
-          <InputField
-            label="Email address"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-          />
-          <InputField
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            error={errors.password}
-          />
-          {!isLogin && (
-            <InputField
-              label="Confirm Password"
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              error={errors.confirmPassword}
-            />
-          )}
+            {apiError && <p className="status-error mb-4 rounded-2xl px-4 py-3 text-center text-sm">{apiError}</p>}
+            {successMessage && <p className="status-success mb-4 rounded-2xl px-4 py-3 text-center text-sm">{successMessage}</p>}
 
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition duration-300"
-          >
-            {isLogin ? 'Sign In' : 'Register'}
-          </button>
-        </form>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <>
+                  <InputField label="Name" type="text" name="name" value={formData.name} onChange={handleChange} error={errors.name} />
+                  <InputField label="Phone number" type="tel" name="phone" value={formData.phone} onChange={handleChange} error={errors.phone} />
+                  <div className="relative z-0 w-full mb-6 group">
+                    <label className="page-copy mb-2 block text-sm">Role</label>
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="field-base block w-full px-4 py-4 text-sm"
+                    >
+                      <option value="">
+                        Select Role
+                      </option>
+                      <option value="ROLE_AGENT">
+                        Agent
+                      </option>
+                      <option value="ROLE_BUYER">
+                        Buyer
+                      </option>
+                    </select>
+                    {errors.role && <p className="mt-1 text-xs text-red-400">{errors.role}</p>}
+                  </div>
+                </>
+              )}
+
+              <InputField label="Email address" type="email" name="email" value={formData.email} onChange={handleChange} error={errors.email} />
+              <InputField label="Password" type="password" name="password" value={formData.password} onChange={handleChange} error={errors.password} />
+              {!isLogin && (
+                <InputField
+                  label="Confirm Password"
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={errors.confirmPassword}
+                />
+              )}
+
+              <button
+                type="submit"
+                className="w-full rounded-full bg-gradient-to-r from-emerald-300 to-emerald-500 px-4 py-3 font-semibold text-slate-950 transition duration-300 hover:brightness-105"
+              >
+                {isLogin ? "Sign In" : "Register"}
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );

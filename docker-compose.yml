@@ -1,0 +1,50 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: realestate-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./RealestateApiServer
+    container_name: realestate-backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_HOST: mongo
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: ${MONGO_DB_NAME:-realestate_db}
+      FILE_UPLOAD_DIR: /app/uploads
+      SECURITY_JWT_SECRET: ${SECURITY_JWT_SECRET:-X9f$7vL!pR2@eTz#Wq8^mKj&bD6*YcA1}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:80,http://localhost}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - uploads_data:/app/uploads
+
+  frontend:
+    build:
+      context: ./realestate-frontend
+      args:
+        VITE_API_BASE_URL: ""
+    container_name: realestate-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+
+volumes:
+  mongo_data:
+  uploads_data:
