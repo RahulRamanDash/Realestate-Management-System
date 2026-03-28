@@ -6,6 +6,12 @@ export const normalizeRole = (role) => {
   return role || "";
 };
 
+export const AUTH_STORAGE_KEYS = {
+  ACCESS_TOKEN: "accessToken",
+  REFRESH_TOKEN: "refreshToken",
+  USER: "loggedUser",
+};
+
 export const formatRoleLabel = (role) => {
   switch (normalizeRole(role)) {
     case "ROLE_BUYER":
@@ -21,7 +27,7 @@ export const formatRoleLabel = (role) => {
 
 export const getLoggedUser = () => {
   try {
-    const rawUser = localStorage.getItem("loggedUser");
+    const rawUser = localStorage.getItem(AUTH_STORAGE_KEYS.USER);
     if (!rawUser) {
       return null;
     }
@@ -34,6 +40,33 @@ export const getLoggedUser = () => {
   } catch {
     return null;
   }
+};
+
+export const getAccessToken = () => localStorage.getItem(AUTH_STORAGE_KEYS.ACCESS_TOKEN);
+export const getRefreshToken = () => localStorage.getItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN);
+
+export const setSession = (authResponse) => {
+  if (!authResponse?.accessToken || !authResponse?.refreshToken) {
+    return;
+  }
+
+  localStorage.setItem(AUTH_STORAGE_KEYS.ACCESS_TOKEN, authResponse.accessToken);
+  localStorage.setItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN, authResponse.refreshToken);
+  localStorage.setItem(
+    AUTH_STORAGE_KEYS.USER,
+    JSON.stringify({
+      id: authResponse.userId,
+      name: authResponse.name,
+      email: authResponse.email,
+      role: normalizeRole(authResponse.role),
+    })
+  );
+};
+
+export const clearSession = () => {
+  localStorage.removeItem(AUTH_STORAGE_KEYS.ACCESS_TOKEN);
+  localStorage.removeItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN);
+  localStorage.removeItem(AUTH_STORAGE_KEYS.USER);
 };
 
 export const isAgent = (user) => normalizeRole(user?.role) === "ROLE_AGENT";

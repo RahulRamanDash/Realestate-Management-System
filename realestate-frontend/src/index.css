@@ -270,6 +270,16 @@ a {
   transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }
 
+html[data-theme="light"] .primary-button {
+  color: #ffffff;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 16px 40px rgba(34, 197, 94, 0.2);
+}
+
+html[data-theme="light"] .primary-button:hover {
+  box-shadow: 0 20px 44px rgba(34, 197, 94, 0.3);
+}
+
 .primary-button:hover {
   transform: translateY(-1px);
   filter: brightness(1.02);
@@ -482,4 +492,31 @@ html[data-theme="light"] .shadow-black\/20,
 html[data-theme="light"] .shadow-black\/25,
 html[data-theme="light"] .shadow-black\/30 {
   --tw-shadow-color: rgba(16, 36, 32, 0.1) !important;
+}
+
+/* Image Optimization */
+img {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+img[loading="lazy"] {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Property card images */
+.market-card img,
+.property-card img {
+  image-rendering: auto;
+  image-rendering: crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Force high-quality image rendering */
+@supports (image-rendering: high-quality) {
+  img {
+    image-rendering: high-quality;
+  }
 }

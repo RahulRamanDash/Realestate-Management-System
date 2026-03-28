@@ -5,6 +5,7 @@ import api from "../../../api/axiosInstance";
 import DashboardNavbar from "../../../components/DashboardNavbar";
 import { getLoggedUser } from "../../../utils/auth";
 import { resolveImageUrl } from "../../../utils/property";
+import { getPropertyErrorMessage } from "../../../shared/utils/errorMessages";
 
 const emptyForm = {
   title: "",
@@ -63,7 +64,7 @@ const AddProperty = () => {
         setNewImagePreviews([]);
       } catch (error) {
         console.error("Failed to load property:", error);
-        setMessage("Unable to load this property for editing.");
+        setMessage(getPropertyErrorMessage(error, 'fetch'));
       } finally {
         setInitialLoading(false);
       }
@@ -159,7 +160,8 @@ const AddProperty = () => {
       navigate("/my-listings");
     } catch (error) {
       console.error("Error saving property:", error);
-      setMessage("Failed to save property. Try again.");
+      const operation = propertyId ? 'update' : 'create';
+      setMessage(getPropertyErrorMessage(error, operation));
     } finally {
       setLoading(false);
     }

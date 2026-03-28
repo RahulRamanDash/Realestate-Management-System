@@ -21,16 +21,14 @@ services:
       mongo:
         condition: service_healthy
     environment:
-      SPRING_DATA_MONGODB_HOST: mongo
-      SPRING_DATA_MONGODB_PORT: 27017
-      SPRING_DATA_MONGODB_DATABASE: ${MONGO_DB_NAME:-realestate_db}
-      FILE_UPLOAD_DIR: /app/uploads
-      SECURITY_JWT_SECRET: ${SECURITY_JWT_SECRET:-X9f$7vL!pR2@eTz#Wq8^mKj&bD6*YcA1}
-      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:80,http://localhost}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/${MONGO_DB_NAME:-realestate_db}}
+      UPLOAD_DIR: /var/www/realestate/uploads
+      JWT_SECRET: ${JWT_SECRET:-local-development-jwt-secret-key-change-before-deploy-1234567890}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:80,http://localhost}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     volumes:
-      - uploads_data:/app/uploads
+      - uploads_data:/var/www/realestate/uploads
 
   frontend:
     build:

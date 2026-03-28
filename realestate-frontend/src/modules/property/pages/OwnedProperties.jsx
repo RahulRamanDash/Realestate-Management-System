@@ -3,6 +3,7 @@ import api from "../../../api/axiosInstance";
 import DashboardNavbar from "../../../components/DashboardNavbar";
 import PropertyCard from "../components/PropertyCard";
 import { getLoggedUser } from "../../../utils/auth";
+import { getPropertyErrorMessage } from "../../../shared/utils/errorMessages";
 
 const OwnedProperties = () => {
   const user = getLoggedUser();
@@ -26,7 +27,7 @@ const OwnedProperties = () => {
         setProperties(Array.isArray(response.data) ? response.data : []);
       } catch (fetchError) {
         console.error("Failed to load buyer properties:", fetchError);
-        setError("Unable to load your owned properties right now.");
+        setError(getPropertyErrorMessage(fetchError, 'fetch'));
       } finally {
         setLoading(false);
       }

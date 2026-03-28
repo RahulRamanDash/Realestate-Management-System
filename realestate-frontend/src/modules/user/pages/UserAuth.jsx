@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { ArrowLeft, BadgeCheck, Building2, Shield, UserCircle2 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { normalizeRole } from "../../../utils/auth";
+import api from "../../../api/axiosInstance";
+import { setSession } from "../../../utils/auth";
+import { getAuthErrorMessage, getFieldErrors } from "../../../shared/utils/errorMessages";
 
 const InputField = ({ label, type, name, value, onChange, error }) => (
   <div className="relative z-0 w-full mb-6 group">
@@ -46,6 +47,7 @@ const UserAuth = () => {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleTabChange = (tab) => {
@@ -97,28 +99,18 @@ const UserAuth = () => {
       return;
     }
 
+    setSubmitting(true);
     try {
       if (isLogin) {
-        const response = await axios.post("http://localhost:8080/api/auth/login", {
+        const response = await api.post("/auth/login", {
           email: formData.email,
           password: formData.password,
         });
 
-        const data = response.data;
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        localStorage.setItem(
-          "loggedUser",
-          JSON.stringify({
-            id: data.userId,
-            name: data.name,
-            email: data.email,
-            role: normalizeRole(data.role),
-          })
-        );
+        setSession(response.data);
         navigate("/dashboard");
       } else {
-        await axios.post("http://localhost:8080/api/auth/register", {
+        await api.post("/auth/register", {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
@@ -139,7 +131,14 @@ const UserAuth = () => {
         setSuccessMessage("Registration successful! Please login.");
       }
     } catch (error) {
-      setApiError(error.response?.data?.message || "Operation failed");
+      const errorMessage = getAuthErrorMessage(error);
+      const fieldErrors = getFieldErrors(error);
+      setApiError(errorMessage);
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -256,9 +255,10 @@ const UserAuth = () => {
 
               <button
                 type="submit"
+                disabled={submitting}
                 className="w-full rounded-full bg-gradient-to-r from-emerald-300 to-emerald-500 px-4 py-3 font-semibold text-slate-950 transition duration-300 hover:brightness-105"
               >
-                {isLogin ? "Sign In" : "Register"}
+                {submitting ? "Please wait..." : isLogin ? "Sign In" : "Register"}
               </button>
             </form>
           </div>
