@@ -8,6 +8,24 @@ import { BADGE_VARIANTS, BUTTON_VARIANTS } from '../../shared/utils/constants';
 import { getPropertyLocation, resolveImageUrl } from '../../utils/property';
 import { isBuyer } from '../../utils/auth';
 
+const getCandidateImages = (property) => {
+  const images = [];
+
+  if (Array.isArray(property?.imageUrls)) {
+    images.push(...property.imageUrls);
+  }
+
+  if (property?.imageUrl) {
+    images.push(property.imageUrl);
+  }
+
+  if (property?.image) {
+    images.push(property.image);
+  }
+
+  return images.filter((image) => typeof image === 'string' && image.trim() !== '');
+};
+
 /**
  * Modern PropertyCard Component
  * Displays property with image, details, badges, and actions
@@ -24,14 +42,11 @@ const PropertyCard = ({
 }) => {
   const navigate = useNavigate();
   
-  // Get first image from imageUrls array or single imageUrl
-  const firstImage = Array.isArray(property?.imageUrls) && property.imageUrls.length > 0
-    ? property.imageUrls[0]
-    : property?.imageUrl || property?.image;
-  
-  const [imageSrc, setImageSrc] = useState(resolveImageUrl(firstImage));
+  const candidateImages = getCandidateImages(property);
+  const [imageIndex, setImageIndex] = useState(0);
+  const [imageSrc, setImageSrc] = useState(resolveImageUrl(candidateImages[0]));
   const [isFavorite, setIsFavorite] = useState(false);
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isImageLoading, setIsImageLoading] = useState(Boolean(candidateImages[0]));
 
   const propertyId = getPropertyId(property);
   const isSold =
@@ -58,6 +73,15 @@ const PropertyCard = ({
   };
 
   const handleImageError = () => {
+    const nextIndex = imageIndex + 1;
+
+    if (nextIndex < candidateImages.length) {
+      setImageIndex(nextIndex);
+      setImageSrc(resolveImageUrl(candidateImages[nextIndex]));
+      setIsImageLoading(true);
+      return;
+    }
+
     setImageSrc('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23334155%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2224%22 fill=%22%23cbd5e1%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ENo Image Available%3C/text%3E%3C/svg%3E');
     setIsImageLoading(false);
   };
@@ -67,9 +91,10 @@ const PropertyCard = ({
   };
 
   useEffect(() => {
-    setImageSrc(resolveImageUrl(firstImage));
-    setIsImageLoading(true);
-  }, [firstImage, propertyId]);
+    setImageIndex(0);
+    setImageSrc(resolveImageUrl(candidateImages[0]));
+    setIsImageLoading(Boolean(candidateImages[0]));
+  }, [property?.image, property?.imageUrl, property?.imageUrls, propertyId]);
 
   return (
     <div
@@ -94,14 +119,12 @@ const PropertyCard = ({
           <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-white/10 to-white/5" />
         )}
         <img
+          key={`${propertyId}-${imageSrc}`}
           src={imageSrc}
           alt={property?.title || 'Property'}
           onLoad={handleImageLoad}
           onError={handleImageError}
-          className={cn(
-            'h-full w-full object-cover transition-transform duration-500 group-hover:scale-105',
-            isImageLoading && 'opacity-0'
-          )}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           style={{
             imageRendering: 'crisp-edges',
             WebkitFontSmoothing: 'antialiased'

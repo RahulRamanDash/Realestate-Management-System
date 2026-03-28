@@ -22,7 +22,9 @@ const AddProperty = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const propertyId = searchParams.get("propertyId");
+  const source = searchParams.get("source");
   const user = getLoggedUser();
+  const returnPath = source === "admin" ? "/admin/properties" : "/my-listings";
 
   const [formData, setFormData] = useState(emptyForm);
   const [existingImages, setExistingImages] = useState([]);
@@ -157,7 +159,7 @@ const AddProperty = () => {
         resetForm();
       }
 
-      navigate("/my-listings");
+      navigate(returnPath);
     } catch (error) {
       console.error("Error saving property:", error);
       const operation = propertyId ? 'update' : 'create';
@@ -168,19 +170,19 @@ const AddProperty = () => {
   };
 
   return (
-    <div className="page-shell flex min-h-screen flex-col">
+    <div className="page-shell">
       <DashboardNavbar />
 
-      <main className="section-shell flex-1 p-4 sm:p-6">
+      <main className="section-shell px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6">
         <div className="mx-auto max-w-7xl">
-          <Link to="/my-listings" className="inline-flex items-center gap-2 text-sm text-slate-300 transition hover:text-white">
+          <Link to={returnPath} className="inline-flex items-center gap-2 text-sm text-slate-300 transition hover:text-white">
             <ArrowLeft className="h-4 w-4" />
-            Back to Listings
+            {source === "admin" ? "Back to Properties" : "Back to Listings"}
           </Link>
         </div>
 
-        <div className="mx-auto mt-6 grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="glass-panel rounded-[2rem] p-8">
+        <div className="mx-auto mt-6 grid max-w-7xl items-start gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-8">
+          <div className="glass-panel self-start rounded-[2rem] p-6 lg:p-8">
             <span className="eyebrow">{propertyId ? "Listing Editor" : "Listing Studio"}</span>
             <h1 className="headline-font page-heading mt-6 text-4xl font-bold">
               {propertyId ? "Update your property details with the same publishing workflow." : "Publish a property with a cleaner, more credible presentation."}
@@ -205,7 +207,7 @@ const AddProperty = () => {
             </div>
           </div>
 
-          <div className="glass-panel-strong rounded-[2rem] p-8">
+          <div className="glass-panel-strong self-start rounded-[2rem] p-6 lg:p-8">
             <h2 className="headline-font page-heading text-3xl font-bold">
               {propertyId ? "Edit Property" : "Add New Property"}
             </h2>

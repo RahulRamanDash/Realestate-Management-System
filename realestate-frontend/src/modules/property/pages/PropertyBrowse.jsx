@@ -12,7 +12,7 @@ import { getPropertyErrorMessage } from "../../../shared/utils/errorMessages";
 const initialFilters = {
   city: "",
   type: "",
-  availability: "",
+  availability: "available",
   minPrice: "",
   maxPrice: "",
 };
@@ -214,9 +214,7 @@ const PropertyBrowse = () => {
                   onChange={handleFilterChange}
                   className="field-base px-4 py-3 text-sm"
                 >
-                  <option value="">All</option>
-                  <option value="available">Available</option>
-                  <option value="sold">Sold</option>
+                  <option value="available">Available Only</option>
                 </select>
               </div>
 
