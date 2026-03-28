@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ArrowLeft, BadgeCheck, Building2, Shield, UserCircle2 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/axiosInstance";
-import { setSession } from "../../../utils/auth";
+import { normalizeRole, setSession } from "../../../utils/auth";
 import { getAuthErrorMessage, getFieldErrors } from "../../../shared/utils/errorMessages";
 
 const InputField = ({ label, type, name, value, onChange, error }) => (
@@ -108,7 +108,8 @@ const UserAuth = () => {
         });
 
         setSession(response.data);
-        navigate("/dashboard");
+        const nextRole = normalizeRole(response.data?.role);
+        navigate(nextRole === "ROLE_ADMIN" ? "/admin/dashboard" : "/dashboard");
       } else {
         await api.post("/auth/register", {
           name: formData.name,

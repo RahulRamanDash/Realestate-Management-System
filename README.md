@@ -1,204 +1,235 @@
 # Real Estate Management System
 
-A comprehensive real estate management system that includes both frontend and backend components for managing properties, agents, and clients.
+A full-stack real estate platform with a Spring Boot + MongoDB backend and a React + Vite frontend. The application supports JWT authentication, role-based access, property management, image uploads, buyer purchase flows, and an admin dashboard.
 
-## Authors
-- Rahul Raman Dash
-- Ayush Samanta
+## Current Stack
 
-## Project Structure
-
-```
-Realestate-Management-System/
-├── RealestateApiServer/         # Backend Spring Boot Application
-└── RealestateFrontend/          # Frontend React Application
-```
-
-## Environment Variables Setup
-
-### Backend Configuration
-The following environment variables need to be set for the backend to work:
-
-```bash
-# Database Configuration
-SPRING_DATASOURCE_URL=jdbc:mysql://your-database-host:port/database_name
-SPRING_DATASOURCE_USERNAME=your_username
-SPRING_DATASOURCE_PASSWORD=your_password
-SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
-```
-
-### Setting up Environment Variables
-
-#### Local Development
-1. Create a `.env` file in the `RealestateApiServer` directory
-2. Copy the variables from `application.properties.template`
-3. Fill in your local database credentials
-
-#### Production (Render)
-1. Go to your Render dashboard
-2. Select your service
-3. Navigate to "Environment" tab
-4. Add the environment variables listed above
-
-## Backend (RealestateApiServer)
-
-### Technology Stack
+### Backend
 - Java 17
-- Spring Boot
+- Spring Boot 3.4.4
+- Spring Web
 - Spring Security
-- JWT Authentication
-- MySQL Database
+- Spring Data MongoDB
+- JWT (`jjwt`)
+- Bean Validation
+- Lombok
 - Docker
 
-### Features
-- User Authentication and Authorization
-- Property Management
-- Agent Management
-- Client Management
-- API Documentation (Swagger)
+### Frontend
+- React 19
+- Vite 6
+- React Router DOM 7
+- Axios
+- Tailwind CSS
+- Framer Motion
+- Lucide React
 
-### API Endpoints
-- `/api/auth/*` - Authentication endpoints
-- `/api/properties/*` - Property management endpoints
-- `/api/agents/*` - Agent management endpoints
-- `/api/clients/*` - Client management endpoints
+## Repository Structure
 
-### Database Schema
-The system uses a relational database with the following main entities:
-- Users
-- Properties
-- Agents
-- Clients
-- Transactions
-
-## Frontend (RealestateFrontend)
-
-### Technology Stack
-- React
-- TypeScript
-- Material-UI
-- Redux for State Management
-- Axios for API calls
-
-### Features
-- Responsive Design
-- User Authentication
-- Property Listing and Search
-- Agent Dashboard
-- Client Management Interface
-- Property Management Tools
-
-## Application Screenshots
-
-### Login Page
-![Login Page](screenshots/login.png)
-
-### Dashboard
-![Dashboard](screenshots/dashboard.png)
-
-### Property Listing
-![Property Listing](screenshots/property-listing.png)
-
-### Property Details
-![Property Details](screenshots/property-details.png)
-
-### Agent Management
-![Agent Management](screenshots/agent-management.png)
-
-### Client Management
-![Client Management](screenshots/client-management.png)
-
-## Getting Started
-
-### Prerequisites
-- Java 17
-- Node.js (for frontend)
-- MongoDB
-- Docker (optional)
-
-### Backend Setup
-1. Navigate to the backend directory:
-   ```bash
-   cd RealestateApiServer
-   ```
-
-2. Configure the environment variables as described above
-
-3. Build and run the application:
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-
-   Or use the Docker Compose deployment from the project root:
-   ```bash
-   docker compose up --build
-   ```
-
-### Frontend Setup
-1. Navigate to the frontend directory:
-   ```bash
-   cd RealestateFrontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm start
-   ```
-
-## Deployment
-
-The repo includes a full Docker Compose deployment for:
-- MongoDB
-- Spring Boot backend
-- React frontend served by nginx
-
-Run everything from the project root:
-
-```bash
-cp .env.example .env
-docker compose up --build
+```text
+Realestate-Management-System/
+├── RealestateApiServer/      # Spring Boot backend
+├── realestate-frontend/      # React Vite frontend
+└── .github/workflows/        # GitHub Actions workflows
 ```
 
-Services:
-- Frontend: `http://localhost:${FRONTEND_PORT:-3000}`
-- Backend API: `http://localhost:${BACKEND_PORT:-8080}/api`
-- MongoDB: `localhost:${MONGO_PORT:-27017}`
+## Implemented Features
 
-The Compose setup now includes:
-- `unless-stopped` restart policy for all services
-- healthchecks for MongoDB, backend, and frontend
-- service startup ordering based on health
-- configurable ports and secrets through `.env`
+### Authentication
+- User registration
+- Login with JWT access and refresh tokens
+- Automatic token refresh in Axios interceptor
+- Role-based route protection
 
-Optional:
+### Roles
+- `ROLE_BUYER`
+- `ROLE_AGENT`
+- `ROLE_ADMIN`
+
+### Property Management
+- Create property listings with multipart image upload
+- Update property details and images
+- Delete listings
+- Browse available properties
+- Property details page
+- Property purchase flow for buyers
+- Owned properties page for buyers
+- My Listings page for agents and admins
+
+### Admin Module
+- Admin dashboard overview
+- User listing and user details
+- Role update for users
+- Global property management
+- Property details and agent reassignment
+
+### Media Handling
+- Filesystem-based image storage
+- Static image serving from backend
+- Multiple image upload
+- Frontend fallback handling for missing/broken images
+
+## Architecture
+
+### Backend Layers
+- `Controller`: REST endpoints
+- `Service`: business logic
+- `Repository`: MongoDB data access
+- `Security`: JWT filter, token service, user details service
+- `Config`: security, password encoder, static resource mapping
+
+### Frontend Structure
+- `src/modules`: feature pages grouped by domain
+- `src/components`: reusable UI
+- `src/api`: Axios configuration
+- `src/utils`: auth, property, theme helpers
+- `src/shared`: shared constants and helpers
+
+## Main API Areas
+
+### Auth
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+
+### Properties
+- `GET /api/properties`
+- `GET /api/properties/search`
+- `GET /api/properties/{id}`
+- `GET /api/properties/buyer/{buyerId}`
+- `POST /api/properties/add`
+- `PUT /api/properties/{id}`
+- `PATCH /api/properties/{id}/purchase/{buyerId}`
+- `DELETE /api/properties/{id}`
+
+### Uploads
+- `POST /api/upload/images`
+- `GET /api/upload/images/{filename}`
+
+### Admin
+- `GET /api/admin/summary`
+- `GET /api/admin/users`
+- `GET /api/admin/users/{id}`
+- `PATCH /api/admin/users/{id}/role`
+- `GET /api/admin/properties`
+- `GET /api/admin/properties/{id}`
+- `PATCH /api/admin/properties/{id}/reassign-agent`
+
+## Environment Configuration
+
+### Backend
+Set these as environment variables or rely on local defaults where noted:
+
 ```bash
-export SECURITY_JWT_SECRET="your-strong-secret"
-docker compose up --build
+MONGODB_URI=mongodb://localhost:27017/realestate_db
+UPLOAD_DIR=/var/www/realestate/uploads
+JWT_SECRET=change-this-to-a-strong-secret-with-32-plus-characters
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 ```
 
-## API Documentation
+Useful defaults from `application.properties`:
+- MongoDB defaults to `mongodb://localhost:27017/realestate_db`
+- access token expiry: 15 minutes
+- refresh token expiry: 7 days
 
-API documentation is available at `/swagger-ui.html` when running the backend server.
+### Frontend
 
-## Contributing
+```bash
+VITE_API_BASE_URL=http://localhost:8080
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+For GitHub Pages deployment, set the repository variable:
 
-## License
+```bash
+VITE_API_BASE_URL=https://your-backend-domain
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Local Development
 
-## Contact
+### Backend
 
-For any queries or support, please contact:
+```bash
+cd RealestateApiServer
+mvn spring-boot:run
+```
+
+Backend runs on:
+
+```bash
+http://localhost:8080
+```
+
+### Frontend
+
+```bash
+cd realestate-frontend
+npm install
+npm run dev
+```
+
+Frontend runs on:
+
+```bash
+http://localhost:3000
+```
+
+## Build
+
+### Backend
+
+```bash
+cd RealestateApiServer
+mvn -q -DskipTests compile
+```
+
+### Frontend
+
+```bash
+cd realestate-frontend
+npm run build
+```
+
+## Docker
+
+The backend includes a Dockerfile:
+
+```bash
+cd RealestateApiServer
+docker build -t realestate-api .
+docker run -p 8080:8080 realestate-api
+```
+
+## GitHub Pages Deployment
+
+The frontend now includes a GitHub Actions workflow:
+
+- `.github/workflows/deploy-frontend.yml`
+
+It:
+- installs frontend dependencies
+- builds the Vite app
+- publishes `realestate-frontend/dist` to GitHub Pages
+
+### Required GitHub Setup
+- Go to repository `Settings > Pages`
+- Set source to `GitHub Actions`
+- Add repository variable `VITE_API_BASE_URL` if your backend is deployed elsewhere
+
+## Important Notes
+
+- The frontend uses `BrowserRouter` with a Vite `base` path so GitHub Pages subpath deployment works.
+- The backend stores uploaded images on the server filesystem, so production deployments must ensure `UPLOAD_DIR` is writable and persistent.
+- Admin routes exist on both backend and frontend, but admin registration is not public.
+
+## Verification Status
+
+Current project state has been verified with:
+
+```bash
+cd RealestateApiServer && mvn -q -DskipTests compile
+cd realestate-frontend && npm run build
+```
+
+## Authors
 - Rahul Raman Dash
 - Ayush Samanta

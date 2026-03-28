@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, PlusCircle, User, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion"; // eslint-disable-line no-unused-vars
-import { clearSession, formatRoleLabel, getLoggedUser, isAgent, normalizeRole } from "../utils/auth";
+import { clearSession, formatRoleLabel, getLoggedUser, isAdmin, isAgent, normalizeRole } from "../utils/auth";
 import ThemeToggle from "./ThemeToggle";
 
 const DashboardNavbar = () => {
@@ -13,6 +13,7 @@ const DashboardNavbar = () => {
   const dropdownRef = useRef(null);
   const user = getLoggedUser();
   const agent = isAgent(user);
+  const admin = isAdmin(user);
   const normalizedRole = normalizeRole(user?.role);
 
   const menuItems = {
@@ -27,8 +28,11 @@ const DashboardNavbar = () => {
       { name: "Owned Properties", link: "/owned-properties" },
     ],
     ROLE_ADMIN: [
-      { name: "Dashboard", link: "/dashboard" },
-      { name: "Browse Properties", link: "/properties" },
+      { name: "Overview", link: "/admin/dashboard" },
+      { name: "Users", link: "/admin/users" },
+      { name: "Properties", link: "/admin/properties" },
+      { name: "My Listings", link: "/my-listings" },
+      { name: "Browse Market", link: "/properties" },
     ],
   };
 
@@ -53,14 +57,14 @@ const DashboardNavbar = () => {
   return (
     <header className="navbar-shell sticky top-0 z-50 border-b border-white/10 text-white backdrop-blur-xl bg-black/40">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link to="/dashboard" className="headline-font flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <Link to={admin ? "/admin/dashboard" : "/dashboard"} className="headline-font flex items-center gap-3 hover:opacity-80 transition-opacity">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-300 via-emerald-400 to-lime-300 text-lg font-extrabold text-slate-950 shadow-lg shadow-emerald-500/20">
             PP
           </span>
           <div>
             <span className="block text-lg font-bold leading-none">PropertyPro</span>
             <span className="block text-xs uppercase tracking-[0.28em] text-emerald-200/80">
-              {agent ? "Agent Studio" : "Buyer Dashboard"}
+              {admin ? "Admin Console" : agent ? "Agent Studio" : "Buyer Dashboard"}
             </span>
           </div>
         </Link>
@@ -91,10 +95,10 @@ const DashboardNavbar = () => {
 
         <div className="hidden items-center gap-3 lg:flex">
           <ThemeToggle />
-          {agent && (
+          {(agent || admin) && (
             <Link to="/add-property" className="primary-button px-4 py-3 text-sm flex items-center gap-2 hover:scale-105 transition-transform">
               <PlusCircle className="h-4 w-4" />
-              Add Property
+              {admin ? "Create Listing" : "Add Property"}
             </Link>
           )}
 

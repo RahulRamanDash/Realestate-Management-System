@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/upload/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/properties/buyer/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/properties/**").permitAll() // Public can view
