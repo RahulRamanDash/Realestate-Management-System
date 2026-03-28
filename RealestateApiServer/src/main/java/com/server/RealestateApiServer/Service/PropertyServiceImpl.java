@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.server.RealestateApiServer.Dto.PropertyPageResponse;
+import com.server.RealestateApiServer.Exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +27,7 @@ public class PropertyServiceImpl implements PropertyService{
     @Override
     public Property findById(String id) {
         return propertyRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + id));
     }
 
     @Override
@@ -163,6 +164,10 @@ public class PropertyServiceImpl implements PropertyService{
 
         if (buyerId == null || buyerId.isBlank()) {
             throw new IllegalArgumentException("Buyer id is required");
+        }
+
+        if (property.getAgentId() != null && property.getAgentId().equals(buyerId)) {
+            throw new IllegalArgumentException("Agents cannot purchase their own property");
         }
 
         if (!property.isAvailable() || (property.getBuyerId() != null && !property.getBuyerId().isBlank())) {

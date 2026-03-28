@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../api/axiosInstance";
 import DashboardNavbar from "../../../components/DashboardNavbar";
 import HomeNavbar from "../../../components/HomeNavbar";
-import PropertyCard from "../components/PropertyCard";
+import { Button, PropertyCard, EmptyState, PropertyCardSkeleton } from "../../../components/index";
+import ConfirmDialog from "../../../components/ConfirmDialog";
 import { getLoggedUser, isBuyer } from "../../../utils/auth";
+import { getPropertyErrorMessage } from "../../../shared/utils/errorMessages";
 
 const initialFilters = {
   city: "",
@@ -30,12 +32,16 @@ const PropertyBrowse = () => {
     totalPages: 0,
     hasNext: false,
     hasPrevious: false,
-    size: 9,
+    size: 12,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [buyingId, setBuyingId] = useState("");
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    property: null,
+  });
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -62,11 +68,11 @@ const PropertyBrowse = () => {
           totalPages: data.totalPages || 0,
           hasNext: Boolean(data.hasNext),
           hasPrevious: Boolean(data.hasPrevious),
-          size: data.size || 9,
+          size: data.size || 12,
         });
       } catch (fetchError) {
         console.error("Failed to load properties:", fetchError);
-        setError("Unable to load properties right now.");
+        setError(getPropertyErrorMessage(fetchError, 'fetch'));
       } finally {
         setLoading(false);
       }
@@ -96,12 +102,11 @@ const PropertyBrowse = () => {
     if (!canSearch) {
       return;
     }
-
     setAppliedFilters(filters);
     setPage(0);
   };
 
-  const handleBuy = async (property) => {
+  const handleBuy = (property) => {
     const propertyId = property?.id || property?._id;
 
     if (!user) {
@@ -113,10 +118,12 @@ const PropertyBrowse = () => {
       return;
     }
 
-    const confirmed = window.confirm(`Buy "${property.title}" for ${property.price ? `$${Number(property.price).toLocaleString()}` : "the listed price"}?`);
-    if (!confirmed) {
-      return;
-    }
+    setConfirmDialog({ isOpen: true, property });
+  };
+
+  const handleConfirmPurchase = async () => {
+    const property = confirmDialog.property;
+    const propertyId = property?.id || property?._id;
 
     setBuyingId(propertyId);
     setActionMessage("");
@@ -127,10 +134,13 @@ const PropertyBrowse = () => {
       setProperties((current) =>
         current.map((item) => ((item.id || item._id) === propertyId ? updatedProperty : item))
       );
-      setActionMessage("Property purchased successfully. It is now visible in your owned properties.");
+      setActionMessage("✓ Property purchased successfully! Check your owned properties.");
+      setConfirmDialog({ isOpen: false, property: null });
     } catch (purchaseError) {
       console.error("Failed to purchase property:", purchaseError);
-      setActionMessage("Unable to complete this purchase right now.");
+      const errorMsg = getPropertyErrorMessage(purchaseError, 'purchase');
+      setActionMessage(`✗ ${errorMsg}`);
+      setConfirmDialog({ isOpen: false, property: null });
     } finally {
       setBuyingId("");
     }
@@ -140,49 +150,52 @@ const PropertyBrowse = () => {
     <div className="page-shell">
       {user ? <DashboardNavbar /> : <HomeNavbar />}
 
-      <main className="section-shell px-4 pb-16 pt-10">
+      <main className="section-shell px-4 pb-16 pt-6 md:pt-10">
         <div className="mx-auto max-w-7xl space-y-8">
-          <section className="glass-panel rounded-[2rem] p-5 sm:p-6">
-            <div className="mb-4 flex items-start justify-between gap-4">
+          {/* Filters Section */}
+          <div className="glass-panel rounded-2xl p-6">
+            <div className="mb-6 flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-200">
-                  <SlidersHorizontal className="h-5 w-5" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-400/15">
+                  <SlidersHorizontal className="h-5 w-5 text-emerald-300" />
                 </div>
                 <div>
-                  <p className="page-heading text-sm font-semibold">Browse listings</p>
-                  <p className="page-copy text-sm">Search and apply filters.</p>
+                  <h2 className="page-heading text-lg font-semibold">Find Properties</h2>
+                  <p className="page-copy text-xs md:text-sm">Search and filter listings by location, type, and price.</p>
                 </div>
               </div>
               {showResultsCount && (
-                <p className="page-copy pt-2 text-base font-semibold whitespace-nowrap">
-                  {pageMeta.totalElements} records found
+                <p className="page-copy whitespace-nowrap text-sm font-semibold md:text-base">
+                  {pageMeta.totalElements} found
                 </p>
               )}
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-[1.35fr_0.85fr_0.85fr_0.85fr_0.85fr_auto_auto]">
-              <div className="space-y-2">
-                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">City</label>
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.35fr_0.85fr_0.85fr_0.85fr_0.85fr_auto_auto]">
+              {/* City Search */}
+              <div className="space-y-1.5">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-wider">City</label>
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     name="city"
                     placeholder="Search by city"
                     value={filters.city}
                     onChange={handleFilterChange}
-                    className="field-base py-4 pl-11 pr-4"
+                    className="field-base py-3 pl-10 pr-4 text-sm"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">Type</label>
+              {/* Type Select */}
+              <div className="space-y-1.5">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-wider">Type</label>
                 <select
                   name="type"
                   value={filters.type}
                   onChange={handleFilterChange}
-                  className="field-base px-4 py-4"
+                  className="field-base px-4 py-3 text-sm"
                 >
                   <option value="">All types</option>
                   <option value="Apartment">Apartment</option>
@@ -192,13 +205,14 @@ const PropertyBrowse = () => {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">Available</label>
+              {/* Availability Select */}
+              <div className="space-y-1.5">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-wider">Status</label>
                 <select
                   name="availability"
                   value={filters.availability}
                   onChange={handleFilterChange}
-                  className="field-base px-4 py-4"
+                  className="field-base px-4 py-3 text-sm"
                 >
                   <option value="">All</option>
                   <option value="available">Available</option>
@@ -206,96 +220,102 @@ const PropertyBrowse = () => {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">Min Price</label>
+              {/* Min Price */}
+              <div className="space-y-1.5">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-wider">Min Price</label>
                 <input
                   type="number"
                   name="minPrice"
-                  placeholder="Min price"
+                  placeholder="0"
                   value={filters.minPrice}
                   onChange={handleFilterChange}
-                  className="field-base px-4 py-4"
+                  className="field-base px-4 py-3 text-sm"
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="page-copy block text-xs font-semibold uppercase tracking-[0.16em]">Max Price</label>
+              {/* Max Price */}
+              <div className="space-y-1.5">
+                <label className="page-copy block text-xs font-semibold uppercase tracking-wider">Max Price</label>
                 <input
                   type="number"
                   name="maxPrice"
-                  placeholder="Max price"
+                  placeholder="999999"
                   value={filters.maxPrice}
                   onChange={handleFilterChange}
-                  className="field-base px-4 py-4"
+                  className="field-base px-4 py-3 text-sm"
                 />
               </div>
 
-              <div className="flex items-end">
-                <button
-                  type="button"
+              {/* Search Button */}
+              <div className="flex items-end pt-6 sm:pt-0">
+                <Button
                   onClick={applyFilters}
                   disabled={!canSearch}
-                  className={`w-full whitespace-nowrap px-5 py-4 lg:w-auto ${
-                    canSearch
-                      ? "primary-button"
-                      : "cursor-not-allowed rounded-full border border-white/10 bg-white/5 text-sm font-semibold text-slate-400 opacity-70"
-                  }`}
+                  className="w-full lg:w-auto"
                 >
-                  <span className="inline-flex items-center gap-2">
-                    <Search className="h-4 w-4" />
-                    Search
-                  </span>
-                </button>
+                  <Search className="h-4 w-4" />
+                  <span className="hidden sm:inline">Search</span>
+                </Button>
               </div>
 
-              <div className="flex items-end">
-                <button type="button" onClick={clearFilters} className="secondary-button w-full whitespace-nowrap px-5 py-4 lg:w-auto">
+              {/* Reset Button */}
+              <div className="flex items-end pt-6 sm:pt-0">
+                <Button variant="secondary" onClick={clearFilters} className="w-full lg:w-auto">
                   Reset
-                </button>
+                </Button>
               </div>
             </div>
-          </section>
+          </div>
 
+          {/* Action Message */}
           {actionMessage && (
-            <section
-              className={`rounded-[1.5rem] px-5 py-4 text-sm ${
-                actionMessage.includes("successfully") ? "status-success" : "status-error"
+            <div
+              className={`rounded-xl px-4 py-3 text-sm font-medium ${
+                actionMessage.includes("✓") ? "status-success" : "status-error"
               }`}
             >
               {actionMessage}
-            </section>
+            </div>
           )}
 
+          {/* Loading State */}
           {loading && (
-            <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="market-card">
-                  <div className="h-56 animate-pulse inset-panel" />
-                  <div className="space-y-3 p-5">
-                    <div className="h-5 animate-pulse rounded inset-panel" />
-                    <div className="h-4 animate-pulse rounded inset-panel" />
-                    <div className="h-20 animate-pulse rounded inset-panel" />
-                  </div>
-                </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <PropertyCardSkeleton key={index} />
               ))}
-            </section>
+            </div>
           )}
 
+          {/* Error State */}
           {!loading && error && (
-            <section className="status-error rounded-[2rem] px-6 py-12 text-center">
-              {error}
-            </section>
+            <EmptyState
+              title="Unable to load properties"
+              description={error}
+              action={
+                <Button onClick={() => window.location.reload()}>
+                  Try Again
+                </Button>
+              }
+            />
           )}
 
+          {/* Empty State */}
           {!loading && !error && pageMeta.totalElements === 0 && (
-            <section className="status-neutral rounded-[2rem] px-6 py-12 text-center">
-              No properties matched the current filters.
-            </section>
+            <EmptyState
+              title="No properties found"
+              description={
+                showResultsCount
+                  ? "Try adjusting your filters to see more results."
+                  : "Browse available properties to get started."
+              }
+            />
           )}
 
+          {/* Properties Grid */}
           {!loading && !error && properties.length > 0 && (
             <>
-              <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {properties.map((property) => (
                   <PropertyCard
                     key={property.id || property._id}
@@ -305,37 +325,51 @@ const PropertyBrowse = () => {
                     actionLoading={buyingId === (property.id || property._id)}
                   />
                 ))}
-              </section>
+              </div>
 
+              {/* Pagination */}
               {pageMeta.totalPages > 1 && (
-                <section className="flex flex-col items-center justify-center gap-4 pt-2 sm:flex-row">
-                  <button
-                    type="button"
+                <div className="flex flex-col items-center justify-center gap-4 pt-8 sm:flex-row">
+                  <Button
+                    variant="secondary"
                     onClick={() => setPage((current) => Math.max(current - 1, 0))}
                     disabled={!pageMeta.hasPrevious}
-                    className="secondary-button disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </button>
-                  <p className="page-copy text-sm font-semibold">
-                    Page {page + 1} of {pageMeta.totalPages}
-                  </p>
-                  <button
-                    type="button"
+                    <span className="hidden sm:inline">Previous</span>
+                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    <span className="page-copy text-sm">
+                      Page <strong>{page + 1}</strong> of <strong>{pageMeta.totalPages}</strong>
+                    </span>
+                  </div>
+
+                  <Button
+                    variant="secondary"
                     onClick={() => setPage((current) => current + 1)}
                     disabled={!pageMeta.hasNext}
-                    className="secondary-button disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4" />
-                  </button>
-                </section>
+                  </Button>
+                </div>
               )}
             </>
           )}
         </div>
       </main>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title="Confirm Purchase"
+        message={`Purchase "${confirmDialog.property?.title}" for ${confirmDialog.property?.price ? `$${Number(confirmDialog.property.price).toLocaleString()}` : "the listed price"}?`}
+        confirmText="Purchase"
+        cancelText="Cancel"
+        onConfirm={handleConfirmPurchase}
+        onCancel={() => setConfirmDialog({ isOpen: false, property: null })}
+        loading={buyingId === (confirmDialog.property?.id || confirmDialog.property?._id)}
+      />
     </div>
   );
 };

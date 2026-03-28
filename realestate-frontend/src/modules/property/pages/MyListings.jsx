@@ -4,6 +4,7 @@ import api from "../../../api/axiosInstance";
 import DashboardNavbar from "../../../components/DashboardNavbar";
 import PropertyCard from "../components/PropertyCard";
 import { getLoggedUser } from "../../../utils/auth";
+import { getPropertyErrorMessage } from "../../../shared/utils/errorMessages";
 
 const MyListings = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const MyListings = () => {
           setProperties(allProperties.filter((property) => property.agentId === user.id));
         } catch (fallbackError) {
           console.error("Failed to load agent listings:", fallbackError);
-          setError("Unable to load your listings right now.");
+          setError(getPropertyErrorMessage(fallbackError, 'fetch'));
         }
       } finally {
         setLoading(false);
@@ -68,7 +69,7 @@ const MyListings = () => {
       setProperties((current) => current.filter((item) => (item.id || item._id) !== propertyId));
     } catch (deleteError) {
       console.error("Failed to delete property:", deleteError);
-      setError("Unable to delete that listing right now.");
+      setError(getPropertyErrorMessage(deleteError, 'delete'));
     } finally {
       setDeletingId("");
     }
